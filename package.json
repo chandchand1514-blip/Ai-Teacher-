@@ -19,7 +19,7 @@
     "canvas-confetti": "^1.9.4",
     "crypto-js": "^4.2.0",
     "dotenv": "^17.2.3",
-    "esbuild": "^0.25.0",
+    "esbuild": "^0.28.2",
     "express": "^4.21.2",
     "jspdf": "^4.2.1",
     "jszip": "^3.10.2",
