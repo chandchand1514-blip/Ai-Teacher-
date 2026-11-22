@@ -1,0 +1,10 @@
+[
+  {
+    "id": "dir_default_1",
+    "commandText": "Poocho user se ki aaj unka mood kaisa hai aur kya school ka homework poora ho gaya?",
+    "category": "ask_question",
+    "active": true,
+    "createdAt": "2026-11-21T22:29:31.421Z",
+    "createdBy": "Admin Chand"
+  }
+]

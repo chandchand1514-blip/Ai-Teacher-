@@ -1,0 +1,13 @@
+{
+  "downloadButtonText": "Download",
+  "downloadButtonVisible": true,
+  "downloadButtonOnlyWhenLive": false,
+  "profileVisible": true,
+  "profileOnlyWhenLive": false,
+  "blackboardTitle": "BLACKBOARD",
+  "blackboardVisible": true,
+  "appHeaderTitle": "Teacher Jarvis",
+  "subHeaderTitle": "AI Islamic & Academic Tutor",
+  "accentColor": "default",
+  "customBannerText": ""
+}

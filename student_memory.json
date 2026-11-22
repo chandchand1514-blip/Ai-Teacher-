@@ -1,0 +1,73 @@
+{
+  "devices": {
+    "dev_ul38jpd4_mwr2cwp2": {
+      "name": "",
+      "grade": "Class 2",
+      "role": "Basic User",
+      "preferredLanguage": "Hinglish",
+      "hasDownloadedApp": false,
+      "students": [],
+      "deviceType": "Android Mobile",
+      "updatedAt": "2026-11-21T23:53:33.292Z",
+      "lastActivityTimestamp": 1795305213292,
+      "deviceId": "dev_ul38jpd4_mwr2cwp2",
+      "userAgent": "Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/157.0.0.0 Mobile Safari/537.36",
+      "ip": "127.0.0.1",
+      "visitCount": 1,
+      "registeredAt": "2026-11-21T23:53:13.333Z",
+      "lastClosedTimestamp": 1795305213264
+    },
+    "dev_9umx09yw_mwr2ehyq": {
+      "name": "Chand",
+      "grade": "Admin",
+      "role": "Admin",
+      "preferredLanguage": "Hinglish",
+      "hasDownloadedApp": false,
+      "students": [
+        {
+          "name": "Chand",
+          "grade": "Admin",
+          "role": "Admin"
+        }
+      ],
+      "deviceType": "Android Mobile",
+      "updatedAt": "2026-11-22T01:06:43.174Z",
+      "lastActivityTimestamp": 1795309603174,
+      "deviceId": "dev_9umx09yw_mwr2ehyq",
+      "userAgent": "Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/157.0.0.0 Mobile Safari/537.36",
+      "ip": "127.0.0.1",
+      "visitCount": 15,
+      "registeredAt": "2026-11-21T23:54:27.349Z",
+      "lastClosedTimestamp": 1795309196037,
+      "foodQuestionFlags": {
+        "morningDate": "2026-11-22",
+        "lastAskedSlot": "morning",
+        "lastAskedTimestamp": 1795309138859
+      },
+      "studyDaysLogged": [
+        "2026-11-22"
+      ],
+      "lastTopic": "Admin Panel"
+    },
+    "dev_1kaqba2j_mwr65fwt": {
+      "deviceId": "dev_1kaqba2j_mwr65fwt",
+      "deviceType": "Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/157.0.0.0 Mobile Safari/537.36",
+      "userAgent": "Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/157.0.0.0 Mobile Safari/537.36",
+      "ip": "2409:40f2:3b:fef5:8000::",
+      "name": "",
+      "grade": "Class 2",
+      "role": "Basic User",
+      "visitCount": 1,
+      "registeredAt": "2026-11-22T01:39:23.548Z",
+      "updatedAt": "2026-11-22T01:39:39.889Z",
+      "lastActivityTimestamp": 1795311579889,
+      "preferredLanguage": "Hinglish",
+      "hasDownloadedApp": false,
+      "students": [],
+      "studyDaysLogged": [
+        "2026-11-22"
+      ],
+      "lastClosedTimestamp": 1795311579888
+    }
+  }
+}

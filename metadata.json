@@ -1,0 +1,11 @@
+{
+  "name": "AI Teacher",
+  "description": "Interactive Voice & Blackboard AI Teacher for Students with real-time handwriting evaluation and personalized guidance.",
+  "requestFramePermissions": [
+    "microphone",
+    "camera"
+  ],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}
