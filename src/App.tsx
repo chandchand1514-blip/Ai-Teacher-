@@ -2270,7 +2270,7 @@ LOOK AT THE LIVE CAMERA FRAME IMAGE RIGHT NOW WITH YOUR VISION:
       <footer className="w-full max-w-sm sm:max-w-md z-20 pb-2 sm:pb-4 flex flex-col items-center gap-3">
         {!isLiveActive ? (
           <div className="flex flex-col items-center gap-2.5 w-full">
-            {targetedAds.some((ad:any)=>ad.placement!=='top') && Boolean(profile.name?.trim()) && Boolean(profile.grade?.trim()) && !profile.hasDownloadedApp && Date.now() >= adDismissedUntil && (
+            {targetedAds.some((ad:any)=>ad.placement!=='top') && Boolean(profile.name?.trim()) && Boolean(profile.grade?.trim()) && !profile.hasDownloadedApp && (
               <div className="w-full max-w-sm px-1 text-left">
                 {targetedAds.filter((ad:any)=>ad.placement!=='top'&&!isAdDismissed(ad.id,'bottom')).map(ad => {
                   const adContent = (
