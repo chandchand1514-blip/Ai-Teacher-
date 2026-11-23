@@ -1962,7 +1962,7 @@ LOOK AT THE LIVE CAMERA FRAME IMAGE RIGHT NOW WITH YOUR VISION:
           {targetedAds.map(ad => (
             <div key={ad.id} className="rounded-2xl bg-slate-900 border border-amber-400/50 shadow-xl p-3 text-left">
               <div className="flex items-start justify-between gap-2"><div><span className="text-[10px] uppercase font-black text-amber-300">Advertisement</span><h3 className="text-sm font-bold text-white">{ad.title}</h3><p className="text-xs text-slate-200 mt-1">{ad.text}</p></div><button onClick={()=>setTargetedAds(prev=>prev.filter(x=>x.id!==ad.id))} className="text-slate-400 p-1">✕</button></div>
-              {ad.linkUrl && <a href={ad.linkUrl} target="_blank" rel="noopener noreferrer" onClick={()=>trackTargetedAd(ad.id,'click')} className="inline-block mt-2 px-3 py-1.5 rounded-lg bg-amber-400 text-slate-950 text-xs font-bold">Learn More</a>}
+              {ad.imageUrl && ad.linkUrl ? <a href={ad.linkUrl} target="_blank" rel="noopener noreferrer" onClick={()=>trackTargetedAd(ad.id,'click')} className="block mt-2 overflow-hidden rounded-xl"><img src={ad.imageUrl} alt={ad.title||'Advertisement'} className="w-full max-h-64 object-contain rounded-xl cursor-pointer"/></a> : ad.imageUrl ? <img src={ad.imageUrl} alt={ad.title||'Advertisement'} className="mt-2 w-full max-h-64 object-contain rounded-xl"/> : null}{ad.linkUrl && !ad.imageUrl && <a href={ad.linkUrl} target="_blank" rel="noopener noreferrer" onClick={()=>trackTargetedAd(ad.id,'click')} className="inline-block mt-2 px-3 py-1.5 rounded-lg bg-amber-400 text-slate-950 text-xs font-bold">Learn More</a>}
             </div>
           ))}
         </div>
