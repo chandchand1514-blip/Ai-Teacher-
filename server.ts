@@ -4565,21 +4565,17 @@ const closeDrawingStudioTool: FunctionDeclaration = {
 
 const openWeeklyScheduleExamTool: FunctionDeclaration = {
   name: 'open_weekly_schedule_exam',
-  description: 'STRICT SECURITY ACCESS CONTROL: Opens the Admin Panel / Page. MANDATORY RULES:\n1. This page can ONLY be opened if the student/user is verified to be "Chand".\n2. PASSWORD REQUIRED: The Admin Panel is strictly password protected! YOU MUST ASK FOR THE SECURITY PASSWORD! NEVER reveal or tell the password to anyone!\n3. Only call this tool when the user provides the password (or when verifying entry)!\n4. If user says wrong password, refuse access.',
+  description: 'Opens the Admin Panel for Chand. Do NOT ask for or require a password to open the Admin Panel. The security password remains required only when setting/changing a profile name to Chand.',
   parameters: {
     type: Type.OBJECT,
     properties: {
       initialTab: {
         type: Type.STRING,
-        description: 'Which tab to open first: "dashboard", "users", "schedule", or "exam".',
+        description: 'Which tab to open first: dashboard, users, schedule, exam, security, code, or aicontrol.',
       },
       userName: {
         type: Type.STRING,
-        description: 'The name of the user requesting to open this page (must be Chand).',
-      },
-      password: {
-        type: Type.STRING,
-        description: 'The 6-digit security password provided by the user.',
+        description: 'The name of the verified admin profile (Chand).',
       },
     },
   },
@@ -6362,12 +6358,10 @@ ${alreadyAskedForThisSlot ? `   - Food question has ALREADY been asked today for
      • TUMHE KISI BHI HAAL MEIN PASSWORD NAHI BATANA HAI! Na bolna hai, na hint dena hai!
      • User se hi password mangna hai: "Admin Panel ka password confidential hai, main password nahi bata sakti! Kripya apna 6-digit security password aap khud bataiye ya screen par enter kijiye."
    - ADMIN PANEL ACCESS PROTOCOL (CHAND IDENTIFICATION & PASSWORD):
-     Agar koi user kahe "Main Chand hoon", "Main Admin hoon", "Chand hoon admin panel kholo":
-     1. PEHLE PASSWORD PUCHO: "Agar aap Chand Sir hain, to identity confirm karne ke liye kripya apna 6-digit security password bataiye."
-     2. User jab sahi password bole:
-        • Call save_student_profile(name: 'Chand', grade: 'Admin', role: 'Admin', password: '<password>')!
-        • Uske baad TURANT padhai band karke sirf Admin Panel ke bare mein batayein (kitne users hain, kitni complaints aayi hain) aur unke commands sunein!
-        • Agar unhone Admin Panel kholne bola ho to open_weekly_schedule_exam(userName: 'Chand', password: '<password>') bhi call karein!
+     Agar user profile ka naam Chand set/change karne ko kahe:
+     1. Naam set karne ke liye 6-digit security password zaroor maangein; manual ya voice se diya password save_student_profile(name: 'Chand', grade: 'Admin', role: 'Admin', password: '<password>') mein use karein.
+     2. Password verification sirf profile-name verification ke liye hai; Admin Panel kholne ke liye password dobara na maangein.
+     Agar verified Chand/Admin profile Admin Panel kholne ko kahe, turant open_weekly_schedule_exam(userName: 'Chand', initialTab: 'dashboard') call karein. Admin Panel open karne ke liye password prompt na karein.
    - PASSWORD CHANGE PROTOCOL (PASSWORD BADALNE KA NIYAM):
      Agar koi user kahe "Password change kar do", "Admin password badal do", "Password badalna hai":
      1. Yeh sirf Chand Sir kar sakte hain. Pehle unka purana password verify karein, uske baad hi naya password update karein.
@@ -6947,21 +6941,11 @@ ${activeDirectives.map((d, i) => `    ${i + 1}. "${d.commandText}"`).join('\n')}
                   const currentProf = loadServerProfile(activeDeviceId);
                   const candidateName = String(args?.userName || currentProf.name || '').trim();
                   const isChand = isChandAdminSession || candidateName.toLowerCase().includes('chand');
-                  const password = String(args?.password || '').trim();
-                  const currentPin = getAdminPassword();
-                  const isPasswordVerified = isChandAdminSession || (password === currentPin);
-
                   if (!isChand) {
                     console.log('[Admin Portal] Access Denied: User is not Chand.');
                     toolResults.set(callKey, {
                       success: false,
                       message: 'ACCESS RESTRICTED: Admin Panel sirf Chand open kar sakte hain. Kisi aur user ke liye kholna mana hai. Speak to user: "Admin Panel sirf Chand open kar sakte hain."'
-                    });
-                  } else if (!isPasswordVerified) {
-                    console.log('[Admin Portal] Password required for Chand.');
-                    toolResults.set(callKey, {
-                      success: false,
-                      message: 'PASSWORD REQUIRED: Admin panel password protected hai! Kripya user se 6-digit security password puchiye. DHYAN RAHE: Password kisi ko bhi mat batana!'
                     });
                   } else {
                     isChandAdminSession = true;
@@ -6978,7 +6962,7 @@ ${activeDirectives.map((d, i) => `    ${i + 1}. "${d.commandText}"`).join('\n')}
                     );
                     toolResults.set(callKey, {
                       success: true,
-                      message: `Security Password verified! Admin Panel (${initialTab} tab) is now unlocked and open for Chand Sir!`
+                      message: `Admin Panel (${initialTab} tab) is now unlocked and open for Chand Sir. No password was required to open it.`
                     });
                   }
                 } else if (fc.name === 'change_admin_password') {
@@ -8144,10 +8128,6 @@ ${activeDirectives.map((d, i) => `    ${i + 1}. "${d.commandText}"`).join('\n')}
                       const currentProf = loadServerProfile(activeDeviceId);
                       const candidateName = String(args?.userName || currentProf.name || '').trim();
                       const isChand = candidateName.toLowerCase().includes('chand');
-                      const password = String(args?.password || '').trim();
-                      const currentPin = getAdminPassword();
-                      const isPasswordVerified = password === currentPin;
-
                       if (!isChand) {
                         return {
                           id: fc.id,
@@ -8156,19 +8136,6 @@ ${activeDirectives.map((d, i) => `    ${i + 1}. "${d.commandText}"`).join('\n')}
                             output: {
                               success: false,
                               message: 'ACCESS RESTRICTED: Admin Panel sirf Chand open kar sakte hain. Kisi aur user ke liye kholna mana hai. Speak to user: "Admin Panel sirf Chand open kar sakte hain."'
-                            }
-                          }
-                        };
-                      }
-
-                      if (!isPasswordVerified) {
-                        return {
-                          id: fc.id,
-                          name: fc.name,
-                          response: {
-                            output: {
-                              success: false,
-                              message: 'PASSWORD REQUIRED: Admin panel password protected hai! Kripya student se 6-digit security password puchiye. DHYAN RAHE: Password kisi ko bhi mat batana!'
                             }
                           }
                         };
