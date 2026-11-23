@@ -197,7 +197,7 @@ export default function App() {
     if (!report) return;
     generateReportCardPdf(report);
   };
-  const [welcomeVideoAdConfig, setWelcomeVideoAdConfig] = useState<{enabled:boolean;videoUrl:string;linkUrl:string;skipAfterSeconds:number}>({enabled:false,videoUrl:'',linkUrl:'',skipAfterSeconds:5});
+  const [welcomeVideoAdConfig, setWelcomeVideoAdConfig] = useState<{enabled:boolean;title:string;videoUrl:string;linkUrl:string;skipAfterSeconds:number}>({enabled:false,title:'',videoUrl:'',linkUrl:'',skipAfterSeconds:5});
   const [welcomeVideoAdReady, setWelcomeVideoAdReady] = useState(false);
   const [showWelcomeVideoAd, setShowWelcomeVideoAd] = useState(false);
   const [welcomeVideoAdMuted, setWelcomeVideoAdMuted] = useState(true);
@@ -206,7 +206,7 @@ export default function App() {
     safeFetchJson('/api/welcome-video-ad').then(data => {
       const config=data?.config;
       if(config) {
-        const normalized={enabled:Boolean(config.enabled),videoUrl:String(config.videoUrl||''),linkUrl:String(config.linkUrl||''),skipAfterSeconds:Math.max(0,Math.min(60,Number(config.skipAfterSeconds)||0))};
+        const normalized={enabled:Boolean(config.enabled),title:String(config.title||''),videoUrl:String(config.videoUrl||''),linkUrl:String(config.linkUrl||''),skipAfterSeconds:Math.max(0,Math.min(60,Number(config.skipAfterSeconds)||0))};
         setWelcomeVideoAdConfig(normalized);setWelcomeVideoAdCountdown(normalized.skipAfterSeconds);setShowWelcomeVideoAd(normalized.enabled&&Boolean(normalized.videoUrl));
       }
     }).catch(()=>{}).finally(()=>setWelcomeVideoAdReady(true));
@@ -2028,7 +2028,7 @@ LOOK AT THE LIVE CAMERA FRAME IMAGE RIGHT NOW WITH YOUR VISION:
             </a>
             <div className="flex items-center justify-between gap-3 px-4 py-3 bg-[#11151c]">
               <div className="min-w-0">
-                <div className="text-sm font-semibold text-white">Watch this advertisement</div>
+                <div className="text-sm font-semibold text-white">{welcomeVideoAdConfig.title||"Watch this advertisement"}</div>
                 <div className="text-xs text-white/45">Tap the video to learn more</div>
               </div>
               <div className="flex items-center gap-2 shrink-0">
