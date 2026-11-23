@@ -1939,16 +1939,26 @@ LOOK AT THE LIVE CAMERA FRAME IMAGE RIGHT NOW WITH YOUR VISION:
   });
 
   const [targetedAds, setTargetedAds] = useState<any[]>([]);
-  const [adDismissedUntil, setAdDismissedUntil] = useState<number>(() => {
-    try { return Number(localStorage.getItem('jarvis_ad_dismissed_until') || 0); } catch (_) { return 0; }
+  const [dismissedAds, setDismissedAds] = useState<Record<string, number>>(() => {
+    try {
+      const saved = JSON.parse(localStorage.getItem('jarvis_ads_dismissed') || '{}');
+      return saved && typeof saved === 'object' ? saved : {};
+    } catch (_) { return {}; }
   });
-  const dismissAdTemporarily = () => {
-    const until = Date.now() + 10 * 60 * 1000;
-    setAdDismissedUntil(until);
-    try { localStorage.setItem('jarvis_ad_dismissed_until', String(until)); } catch (_) {}
+  const isAdDismissed = (adId: string, placement: 'top' | 'bottom') =>
+    (dismissedAds[placement + ':' + adId] || 0) > Date.now();
+  const dismissAdTemporarily = (adId: string, placement: 'top' | 'bottom') => {
+    const key = placement + ':' + adId;
+    const updated = { ...dismissedAds, [key]: Date.now() + 10 * 60 * 1000 };
+    setDismissedAds(updated);
+    try { localStorage.setItem('jarvis_ads_dismissed', JSON.stringify(updated)); } catch (_) {}
     window.setTimeout(() => {
-      setAdDismissedUntil(0);
-      try { localStorage.removeItem('jarvis_ad_dismissed_until'); } catch (_) {}
+      setDismissedAds(current => {
+        const next = { ...current };
+        if ((next[key] || 0) <= Date.now()) delete next[key];
+        try { localStorage.setItem('jarvis_ads_dismissed', JSON.stringify(next)); } catch (_) {}
+        return next;
+      });
     }, 10 * 60 * 1000);
   };
   // Never display raw image/base64 data or technical data-URI strings as advertisement text.
@@ -2106,9 +2116,9 @@ LOOK AT THE LIVE CAMERA FRAME IMAGE RIGHT NOW WITH YOUR VISION:
           )}
 
           {/* Second Advertisement: replaces the Download button in the header */}
-          {targetedAds.some((ad:any)=>ad.placement==='top'||ad.placement==='both') && Boolean(profile.name?.trim()) && Boolean(profile.grade?.trim()) && !profile.hasDownloadedApp && Date.now() >= adDismissedUntil && (
+          {targetedAds.some((ad:any)=>ad.placement==='top'||ad.placement==='both') && Boolean(profile.name?.trim()) && Boolean(profile.grade?.trim()) && !profile.hasDownloadedApp && && (
             <div className="w-full max-w-sm px-1 text-left">
-              {targetedAds.filter((ad:any)=>ad.placement==='top'||ad.placement==='both').map(ad => {
+              {targetedAds.filter((ad:any)=>(ad.placement==='top'||ad.placement==='both')&&!isAdDismissed(ad.id,'top')).map(ad => {
                 const adContent = (
                   <div className="flex items-center gap-3 w-full p-2.5 pr-10 relative min-h-[76px]">
                     <span className="absolute top-0 left-0 w-3 h-3 border-t-2 border-l-2 border-cyan-300/70 rounded-tl-md pointer-events-none" />
@@ -2126,7 +2136,7 @@ LOOK AT THE LIVE CAMERA FRAME IMAGE RIGHT NOW WITH YOUR VISION:
                         {adContent}
                       </a>
                     ) : adContent}
-                    <button type="button" aria-label="Temporarily hide advertisement" title="Hide ad for 10 minutes" onClick={dismissAdTemporarily} className="absolute right-3 top-3 z-10 w-5 h-5 text-white/80 hover:text-white flex items-center justify-center text-xs">✕</button>
+                    <button type="button" aria-label="Temporarily hide advertisement" title="Hide ad for 10 minutes" onClick={()=>dismissAdTemporarily(ad.id,'top')} className="absolute right-3 top-3 z-10 w-5 h-5 text-white/80 hover:text-white flex items-center justify-center text-xs">✕</button>
                   </div>
                 );
               })}
@@ -2238,7 +2248,7 @@ LOOK AT THE LIVE CAMERA FRAME IMAGE RIGHT NOW WITH YOUR VISION:
           <div className="flex flex-col items-center gap-2.5 w-full">
             {targetedAds.some((ad:any)=>ad.placement!=='top') && Boolean(profile.name?.trim()) && Boolean(profile.grade?.trim()) && !profile.hasDownloadedApp && Date.now() >= adDismissedUntil && (
               <div className="w-full max-w-sm px-1 text-left">
-                {targetedAds.filter((ad:any)=>ad.placement!=='top').map(ad => {
+                {targetedAds.filter((ad:any)=>ad.placement!=='top'&&!isAdDismissed(ad.id,'bottom')).map(ad => {
                   const adContent = (
                     <div className="flex items-center justify-center gap-3 w-full rounded-full bg-gradient-to-r from-slate-800 via-slate-700 to-indigo-900 border border-white/25 p-3 pr-12 shadow-[0_6px_24px_rgba(0,0,0,0.45)] relative min-h-[88px]">
                       {ad.imageUrl && <img src={ad.imageUrl} alt={ad.title||'Ad image'} className="block w-16 h-16 shrink-0 rounded-full object-cover border border-white/30 bg-slate-900" loading="eager" onError={(e)=>{e.currentTarget.alt='Advertisement image could not load'; console.warn('Advertisement image failed to load', ad.id);}} />}
@@ -2252,7 +2262,7 @@ LOOK AT THE LIVE CAMERA FRAME IMAGE RIGHT NOW WITH YOUR VISION:
                           {adContent}
                         </a>
                       ) : adContent}
-                      <button type="button" aria-label="Temporarily hide advertisement" title="Hide ad for 10 minutes" onClick={dismissAdTemporarily} className="absolute right-4 top-3 z-10 w-5 h-5 text-white/80 hover:text-white flex items-center justify-center text-xs bg-transparent border-0">✕</button>
+                      <button type="button" aria-label="Temporarily hide advertisement" title="Hide ad for 10 minutes" onClick={()=>dismissAdTemporarily(ad.id,'bottom')} className="absolute right-4 top-3 z-10 w-5 h-5 text-white/80 hover:text-white flex items-center justify-center text-xs bg-transparent border-0">✕</button>
                     </div>
                   );
                 })}
