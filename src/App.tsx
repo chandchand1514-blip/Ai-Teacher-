@@ -1963,7 +1963,7 @@ LOOK AT THE LIVE CAMERA FRAME IMAGE RIGHT NOW WITH YOUR VISION:
     (dismissedAds[placement + ':' + adId] || 0) > Date.now();
   const dismissAdTemporarily = (adId: string, placement: 'top' | 'bottom') => {
     const key = placement + ':' + adId;
-    const updated = { ...dismissedAds, [key]: Date.now() + 10 * 60 * 1000 };
+    const updated = { ...dismissedAds, [key]: Date.now() + 2 * 60 * 1000 };
     setDismissedAds(updated);
     try { localStorage.setItem('jarvis_ads_dismissed', JSON.stringify(updated)); } catch (_) {}
     window.setTimeout(() => {
@@ -2160,7 +2160,7 @@ LOOK AT THE LIVE CAMERA FRAME IMAGE RIGHT NOW WITH YOUR VISION:
                         {adContent}
                       </a>
                     ) : adContent}
-                    <button type="button" aria-label="Temporarily hide advertisement" title="Hide ad for 10 minutes" onClick={()=>dismissAdTemporarily(ad.id,'top')} className="absolute right-3 top-3 z-10 w-5 h-5 text-white/80 hover:text-white flex items-center justify-center text-xs">✕</button>
+                    <button type="button" aria-label="Temporarily hide advertisement" title="Hide ad for 2 minutes" onClick={()=>dismissAdTemporarily(ad.id,'top')} className="absolute right-3 top-3 z-10 w-5 h-5 text-white/80 hover:text-white flex items-center justify-center text-xs">✕</button>
                   </div>
                 );
               })}
