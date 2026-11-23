@@ -1939,6 +1939,12 @@ LOOK AT THE LIVE CAMERA FRAME IMAGE RIGHT NOW WITH YOUR VISION:
   });
 
   const [targetedAds, setTargetedAds] = useState<any[]>([]);
+  // Never display raw image/base64 data or technical data-URI strings as advertisement text.
+  const cleanAdText = (value: unknown) => String(value ?? '')
+    .replace(/data:image\\/[a-zA-Z0-9.+-]+;base64,[\\s\\S]*/gi, '')
+    .replace(/Image:\\s*data:image\\/[^\\s]*/gi, '')
+    .replace(/data:image\\/[^\\s]*/gi, '')
+    .trim();
   useEffect(() => {
     const deviceId = getDeviceId();
     const studentName = (profile.name || '').trim();
@@ -1946,7 +1952,8 @@ LOOK AT THE LIVE CAMERA FRAME IMAGE RIGHT NOW WITH YOUR VISION:
       safeFetchJson('/api/targeted-ads?' + new URLSearchParams({ deviceId, studentName }).toString())
         .then(data => {
           if (data?.success && Array.isArray(data.ads)) {
-            setTargetedAds(data.ads);
+            // Fetch on every app opening and refresh the ad list; track a view for this opening.
+            setTargetedAds(data.ads.map((ad: any) => ({ ...ad, title: cleanAdText(ad.title), text: cleanAdText(ad.text) })));
             if (trackViews) data.ads.forEach((ad: any) => safeFetchJson('/api/targeted-ads/' + encodeURIComponent(ad.id) + '/event', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ studentName: profile.name || 'Student', deviceId, event: 'view' }) }).catch(() => {}));
           }
         }).catch(() => {});
