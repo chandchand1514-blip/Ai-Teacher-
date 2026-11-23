@@ -8147,7 +8147,7 @@ ${activeDirectives.map((d, i) => `    ${i + 1}. "${d.commandText}"`).join('\n')}
                         response: {
                           output: {
                             success: true,
-                            message: 'Security Password verified! Admin Panel is now unlocked and open for Chand!'
+                            message: 'Admin Panel is now unlocked and open for Chand. No password was required to open it.'
                           }
                         }
                       };
