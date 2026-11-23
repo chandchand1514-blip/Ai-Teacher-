@@ -213,6 +213,7 @@ export default function App() {
       }
     }).catch(()=>{}).finally(()=>setWelcomeVideoAdReady(true));
   }, []);
+  useEffect(() => { if(showWelcomeVideoAd)setWelcomeVideoAdLoaded(false); }, [showWelcomeVideoAd, welcomeVideoAdConfig.videoUrl]);
   useEffect(() => { if(!showWelcomeVideoAd||welcomeVideoAdCountdown<=0)return;const timer=window.setTimeout(()=>setWelcomeVideoAdCountdown(v=>Math.max(0,v-1)),1000);return()=>window.clearTimeout(timer); },[showWelcomeVideoAd,welcomeVideoAdCountdown]);
   useEffect(() => { if(!showWelcomeVideoAd)return;const timer=window.setTimeout(()=>{if(!welcomeVideoAdLoaded)setShowWelcomeVideoAd(false);},7000);return()=>window.clearTimeout(timer);},[showWelcomeVideoAd,welcomeVideoAdLoaded]);
   const [showWelcomeModal, setShowWelcomeModal] = useState<boolean>(true);
@@ -2018,11 +2019,13 @@ LOOK AT THE LIVE CAMERA FRAME IMAGE RIGHT NOW WITH YOUR VISION:
         <div className="fixed inset-0 z-[60] bg-black animate-in fade-in duration-300">
           <div className="absolute inset-0">
             <video
+              key={welcomeVideoAdConfig.videoUrl}
               ref={welcomeVideoAdRef}
               src={welcomeVideoAdConfig.videoUrl}
               autoPlay
               muted={welcomeVideoAdMuted}
               onLoadedData={() => setWelcomeVideoAdLoaded(true)}
+              onCanPlay={() => { setWelcomeVideoAdLoaded(true); welcomeVideoAdRef.current?.play().catch(() => {}); }}
               playsInline
               loop
               onError={() => { setWelcomeVideoAdLoaded(false); setShowWelcomeVideoAd(false); setWelcomeVideoAdCountdown(0); }}
