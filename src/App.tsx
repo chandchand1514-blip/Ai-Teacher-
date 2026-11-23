@@ -2023,21 +2023,17 @@ LOOK AT THE LIVE CAMERA FRAME IMAGE RIGHT NOW WITH YOUR VISION:
                 ? <span className="rounded-full bg-black/40 px-3 py-1.5 text-xs font-semibold text-white/75">{welcomeVideoAdCountdown}s</span>
                 : <button type="button" aria-label="Skip advertisement" onClick={()=>setShowWelcomeVideoAd(false)} className="flex items-center gap-1.5 rounded-full bg-white/10 px-3 py-1.5 text-sm font-semibold text-white hover:bg-white/20"><X className="w-4 h-4"/> Skip</button>}
             </div>
-            <a href={welcomeVideoAdConfig.linkUrl||undefined} target="_blank" rel="noopener noreferrer" onClick={e=>{if(!welcomeVideoAdConfig.linkUrl)e.preventDefault();}} className={welcomeVideoAdConfig.linkUrl?'block cursor-pointer':'block cursor-default'}>
-              <video src={welcomeVideoAdConfig.videoUrl} autoPlay muted={welcomeVideoAdMuted} playsInline loop className="w-full max-h-[70dvh] object-contain bg-black"/>
-            </a>
-            <div className="flex items-center justify-between gap-3 px-4 py-3 bg-[#11151c]">
-              <div className="min-w-0">
-                <div className="text-sm font-semibold text-white">{welcomeVideoAdConfig.title||"Watch this advertisement"}</div>
-                <div className="text-xs text-white/45">Tap the video to learn more</div>
-              </div>
-              <div className="flex items-center gap-2 shrink-0">
-                <button type="button" aria-label={welcomeVideoAdMuted?'Turn sound on':'Turn sound off'} onClick={()=>setWelcomeVideoAdMuted(v=>!v)} className="flex items-center gap-2 rounded-full border border-white/15 bg-white/5 px-3 py-2 text-xs font-semibold text-white hover:bg-white/10">
-                  {welcomeVideoAdMuted?<Volume2 className="w-4 h-4"/>:<Volume2 className="w-4 h-4 text-cyan-300"/>}
-                  {welcomeVideoAdMuted?'Sound off':'Sound on'}
-                </button>
-                {welcomeVideoAdConfig.linkUrl&&<button type="button" onClick={()=>window.open(welcomeVideoAdConfig.linkUrl,'_blank','noopener,noreferrer')} className="rounded-full bg-white px-4 py-2 text-xs font-bold text-black hover:bg-white/90">Learn more <ExternalLink className="inline w-3 h-3 ml-1"/></button>}
-              </div>
+            <div className="relative bg-black">
+              <a href={welcomeVideoAdConfig.linkUrl||undefined} target="_blank" rel="noopener noreferrer" onClick={e=>{if(!welcomeVideoAdConfig.linkUrl)e.preventDefault();}} className={welcomeVideoAdConfig.linkUrl?'block cursor-pointer':'block cursor-default'}>
+                <video src={welcomeVideoAdConfig.videoUrl} autoPlay muted={welcomeVideoAdMuted} playsInline loop className="w-full max-h-[70dvh] object-contain bg-black"/>
+              </a>
+              {welcomeVideoAdConfig.title&&<div className="pointer-events-none absolute bottom-4 left-4 right-4 sm:bottom-6 sm:left-6 sm:right-6 text-center"><span className="inline-block max-w-full rounded-lg bg-black/65 px-4 py-2 text-base sm:text-lg font-bold text-white drop-shadow-lg backdrop-blur-sm">{welcomeVideoAdConfig.title}</span></div>}
+            </div>
+            <div className="flex items-center justify-end gap-3 px-4 py-3 bg-[#11151c]">
+              <button type="button" aria-label={welcomeVideoAdMuted?'Turn sound on':'Turn sound off'} onClick={()=>setWelcomeVideoAdMuted(v=>!v)} className="flex items-center gap-2 rounded-full border border-white/15 bg-white/5 px-3 py-2 text-xs font-semibold text-white hover:bg-white/10">
+                {welcomeVideoAdMuted?<Volume2 className="w-4 h-4"/>:<Volume2 className="w-4 h-4 text-cyan-300"/>}
+                {welcomeVideoAdMuted?'Sound off':'Sound on'}
+              </button>
             </div>
           </div>
         </div>
