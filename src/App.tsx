@@ -1035,8 +1035,7 @@ LOOK AT THE LIVE CAMERA FRAME IMAGE RIGHT NOW WITH YOUR VISION:
   useEffect(() => {
     if (location.pathname === '/admin') {
       const profileNameLower = (profile.name || '').trim().toLowerCase();
-      const isChandUser = profileNameLower.includes('chand');
-      if (!isChandUser && !isAdminVerified) {
+      if (!isAdminVerified) {
         navigate('/');
       }
     }
@@ -1948,11 +1947,10 @@ LOOK AT THE LIVE CAMERA FRAME IMAGE RIGHT NOW WITH YOUR VISION:
 
   if (location.pathname === '/admin') {
     const profileNameLower = (profile.name || '').trim().toLowerCase();
-    const isChandUser = profileNameLower.includes('chand');
-    if (!isChandUser && !isAdminVerified) {
+    if (!isAdminVerified) {
       return null;
     }
-    return <AdminPage initialVerified={isAdminVerified || isChandUser} initialTab={adminInitialTab} />;
+    return <AdminPage initialVerified={isAdminVerified} initialTab={adminInitialTab} />;
   }
 
   return (
