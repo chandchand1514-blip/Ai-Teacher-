@@ -2215,16 +2215,16 @@ LOOK AT THE LIVE CAMERA FRAME IMAGE RIGHT NOW WITH YOUR VISION:
         {!isLiveActive ? (
           <div className="flex flex-col items-center gap-2.5 w-full">
             {targetedAds.length > 0 && (
-              <div className="w-full max-w-sm bg-transparent p-0 text-left">
+              <div className="w-full max-w-sm px-1 text-left">
                 {targetedAds.map(ad => {
                   const adContent = (
-                    <div className="flex items-center gap-2.5 w-full">
-                      {ad.imageUrl && <img src={ad.imageUrl} alt={ad.title||'Ad image'} className="block w-28 h-24 shrink-0 rounded-lg object-contain bg-transparent" loading="eager" onError={(e)=>{e.currentTarget.style.display='block'; e.currentTarget.alt='Advertisement image could not load'; console.warn('Advertisement image failed to load', ad.id);}} />}
-                      <div className="min-w-0 flex-1"><h3 className="text-xs font-bold text-white truncate">{ad.title}</h3><p className="text-[10px] text-slate-200 line-clamp-2">{ad.text}</p></div>
+                    <div className="flex items-center gap-3 w-full rounded-full bg-gradient-to-r from-slate-800/95 via-slate-700/90 to-indigo-900/90 border border-white/20 p-2.5 shadow-[0_6px_24px_rgba(0,0,0,0.35)] backdrop-blur-sm">
+                      {ad.imageUrl && <img src={ad.imageUrl} alt={ad.title||'Ad image'} className="block w-20 h-20 shrink-0 rounded-full object-cover border-2 border-white/30 bg-slate-900" loading="eager" onError={(e)=>{e.currentTarget.alt='Advertisement image could not load'; console.warn('Advertisement image failed to load', ad.id);}} />}
+                      <div className="min-w-0 flex-1 pr-2"><h3 className="text-sm font-extrabold text-white line-clamp-2">{ad.title}</h3><p className="text-xs text-slate-200 line-clamp-2 mt-1">{ad.text}</p><span className="inline-flex mt-1.5 text-[10px] font-bold text-cyan-300">Tap to open ↗</span></div>
                     </div>
                   );
                   return ad.linkUrl ? (
-                    <a key={ad.id} href={ad.linkUrl} target="_blank" rel="noopener noreferrer" onClick={()=>trackTargetedAd(ad.id,'click')} className="block w-full cursor-pointer">
+                    <a key={ad.id} href={ad.linkUrl} target="_blank" rel="noopener noreferrer" onClick={()=>trackTargetedAd(ad.id,'click')} className="block w-full cursor-pointer active:scale-[0.98] transition-transform">
                       {adContent}
                     </a>
                   ) : <div key={ad.id}>{adContent}</div>;
