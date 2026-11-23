@@ -2110,7 +2110,11 @@ LOOK AT THE LIVE CAMERA FRAME IMAGE RIGHT NOW WITH YOUR VISION:
             <div className="w-full max-w-sm px-1 text-left">
               {targetedAds.filter((ad:any)=>ad.placement==='top'||ad.placement==='both').map(ad => {
                 const adContent = (
-                  <div className="flex items-center gap-3 w-full p-2.5 pr-10 relative min-h-[76px]">\n                    <span className="absolute top-0 left-0 w-3 h-3 border-t-2 border-l-2 border-cyan-300/70 rounded-tl-md pointer-events-none" />\n                    <span className="absolute top-0 right-0 w-3 h-3 border-t-2 border-r-2 border-cyan-300/70 rounded-tr-md pointer-events-none" />\n                    <span className="absolute bottom-0 left-0 w-3 h-3 border-b-2 border-l-2 border-cyan-300/70 rounded-bl-md pointer-events-none" />\n                    <span className="absolute bottom-0 right-0 w-3 h-3 border-b-2 border-r-2 border-cyan-300/70 rounded-br-md pointer-events-none" />
+                  <div className="flex items-center gap-3 w-full p-2.5 pr-10 relative min-h-[76px]">
+                    <span className="absolute top-0 left-0 w-3 h-3 border-t-2 border-l-2 border-cyan-300/70 rounded-tl-md pointer-events-none" />
+                    <span className="absolute top-0 right-0 w-3 h-3 border-t-2 border-r-2 border-cyan-300/70 rounded-tr-md pointer-events-none" />
+                    <span className="absolute bottom-0 left-0 w-3 h-3 border-b-2 border-l-2 border-cyan-300/70 rounded-bl-md pointer-events-none" />
+                    <span className="absolute bottom-0 right-0 w-3 h-3 border-b-2 border-r-2 border-cyan-300/70 rounded-br-md pointer-events-none" />
                     {ad.imageUrl && <img src={ad.imageUrl} alt={ad.title || 'Ad image'} className="block w-14 h-14 shrink-0 rounded-xl object-cover border border-white/30 bg-slate-900" loading="eager" onError={(e)=>{e.currentTarget.alt='Advertisement image could not load'; console.warn('Advertisement image failed to load', ad.id);}} />}
                     <div className="min-w-0 flex-1"><h3 className="text-xs font-extrabold text-white line-clamp-2">{ad.title}</h3><p className="text-[10px] text-slate-200 line-clamp-2 mt-1">{ad.text}</p><span className="inline-flex mt-1 text-[9px] font-bold text-cyan-300">Tap to open ↗</span></div>
                   </div>
