@@ -1939,6 +1939,18 @@ LOOK AT THE LIVE CAMERA FRAME IMAGE RIGHT NOW WITH YOUR VISION:
   });
 
   const [targetedAds, setTargetedAds] = useState<any[]>([]);
+  const [adDismissedUntil, setAdDismissedUntil] = useState<number>(() => {
+    try { return Number(localStorage.getItem('jarvis_ad_dismissed_until') || 0); } catch (_) { return 0; }
+  });
+  const dismissAdTemporarily = () => {
+    const until = Date.now() + 10 * 60 * 1000;
+    setAdDismissedUntil(until);
+    try { localStorage.setItem('jarvis_ad_dismissed_until', String(until)); } catch (_) {}
+    window.setTimeout(() => {
+      setAdDismissedUntil(0);
+      try { localStorage.removeItem('jarvis_ad_dismissed_until'); } catch (_) {}
+    }, 10 * 60 * 1000);
+  };
   // Never display raw image/base64 data or technical data-URI strings as advertisement text.
   const cleanAdText = (value: unknown) => String(value ?? '')
     .replace(/data:image\/[^,]+;base64,[\s\S]*/gi, '')
@@ -2214,20 +2226,25 @@ LOOK AT THE LIVE CAMERA FRAME IMAGE RIGHT NOW WITH YOUR VISION:
       <footer className="w-full max-w-sm sm:max-w-md z-20 pb-2 sm:pb-4 flex flex-col items-center gap-3">
         {!isLiveActive ? (
           <div className="flex flex-col items-center gap-2.5 w-full">
-            {targetedAds.length > 0 && (
+            {targetedAds.length > 0 && !profile.hasDownloadedApp && Date.now() >= adDismissedUntil && (
               <div className="w-full max-w-sm px-1 text-left">
                 {targetedAds.map(ad => {
                   const adContent = (
-                    <div className="flex items-center gap-3 w-full rounded-full bg-gradient-to-r from-slate-800/95 via-slate-700/90 to-indigo-900/90 border border-white/20 p-2.5 shadow-[0_6px_24px_rgba(0,0,0,0.35)] backdrop-blur-sm">
-                      {ad.imageUrl && <img src={ad.imageUrl} alt={ad.title||'Ad image'} className="block w-20 h-20 shrink-0 rounded-full object-cover border-2 border-white/30 bg-slate-900" loading="eager" onError={(e)=>{e.currentTarget.alt='Advertisement image could not load'; console.warn('Advertisement image failed to load', ad.id);}} />}
-                      <div className="min-w-0 flex-1 pr-2"><h3 className="text-sm font-extrabold text-white line-clamp-2">{ad.title}</h3><p className="text-xs text-slate-200 line-clamp-2 mt-1">{ad.text}</p><span className="inline-flex mt-1.5 text-[10px] font-bold text-cyan-300">Tap to open ↗</span></div>
+                    <div className="flex items-center gap-3 w-full rounded-full bg-gradient-to-r from-slate-800/95 via-slate-700/90 to-indigo-900/90 border border-white/20 p-2.5 pr-10 shadow-[0_6px_24px_rgba(0,0,0,0.35)] backdrop-blur-sm relative">
+                      {ad.imageUrl && <img src={ad.imageUrl} alt={ad.title||'Ad image'} className="block w-20 h-20 shrink-0 rounded-xl object-cover border border-white/30 bg-slate-900" loading="eager" onError={(e)=>{e.currentTarget.alt='Advertisement image could not load'; console.warn('Advertisement image failed to load', ad.id);}} />}
+                      <div className="min-w-0 flex-1"><h3 className="text-sm font-extrabold text-white line-clamp-2">{ad.title}</h3><p className="text-xs text-slate-200 line-clamp-2 mt-1">{ad.text}</p><span className="inline-flex mt-1.5 text-[10px] font-bold text-cyan-300">Tap to open ↗</span></div>
                     </div>
                   );
-                  return ad.linkUrl ? (
-                    <a key={ad.id} href={ad.linkUrl} target="_blank" rel="noopener noreferrer" onClick={()=>trackTargetedAd(ad.id,'click')} className="block w-full cursor-pointer active:scale-[0.98] transition-transform">
-                      {adContent}
-                    </a>
-                  ) : <div key={ad.id}>{adContent}</div>;
+                  return (
+                    <div key={ad.id} className="relative">
+                      {ad.linkUrl ? (
+                        <a href={ad.linkUrl} target="_blank" rel="noopener noreferrer" onClick={()=>trackTargetedAd(ad.id,'click')} className="block w-full cursor-pointer active:scale-[0.98] transition-transform">
+                          {adContent}
+                        </a>
+                      ) : adContent}
+                      <button type="button" aria-label="Temporarily hide advertisement" title="Hide ad for 10 minutes" onClick={dismissAdTemporarily} className="absolute right-2 top-2 z-10 w-6 h-6 rounded-full bg-black/60 hover:bg-black/80 border border-white/30 text-white flex items-center justify-center text-xs">✕</button>
+                    </div>
+                  );
                 })}
               </div>
             )}
