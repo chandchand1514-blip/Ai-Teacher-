@@ -1941,7 +1941,7 @@ LOOK AT THE LIVE CAMERA FRAME IMAGE RIGHT NOW WITH YOUR VISION:
   const [targetedAds, setTargetedAds] = useState<any[]>([]);
   // Never display raw image/base64 data or technical data-URI strings as advertisement text.
   const cleanAdText = (value: unknown) => String(value ?? '')
-    .replace(/data:image[/][a-zA-Z0-9.+-]+;base64,[\s\S]*/gi, '')
+    .replace(/data:image\/[^,]+;base64,[\s\S]*/gi, '')
     .replace(/Image:\s*data:image[/][^\s]*/gi, '')
     .replace(/data:image[/][^\s]*/gi, '')
     .trim();
