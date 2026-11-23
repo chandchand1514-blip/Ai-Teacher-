@@ -1178,12 +1178,9 @@ LOOK AT THE LIVE CAMERA FRAME IMAGE RIGHT NOW WITH YOUR VISION:
 
   // Keep welcome screen visible until the user explicitly starts; never leave a blank app screen.
   const handleWelcomeStartWithMic = async () => {
-    if (welcomeVideoAdConfig.enabled && welcomeVideoAdConfig.videoUrl) {
-      setShowWelcomeModal(false);
-      setWelcomeVideoAdCountdown(welcomeVideoAdConfig.skipAfterSeconds);
-      setShowWelcomeVideoAd(true);
-      return;
-    }
+    // Temporarily bypass the welcome video ad while diagnosing the black-screen issue.
+    setShowWelcomeVideoAd(false);
+    setWelcomeVideoAdLoaded(false);
     setShowWelcomeModal(false);
     requestMicPermission().catch(() => {});
     startSession().catch(() => {});
