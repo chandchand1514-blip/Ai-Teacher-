@@ -215,7 +215,7 @@ export default function App() {
   }, []);
   useEffect(() => { if(showWelcomeVideoAd)setWelcomeVideoAdLoaded(false); }, [showWelcomeVideoAd, welcomeVideoAdConfig.videoUrl]);
   useEffect(() => { if(!showWelcomeVideoAd||welcomeVideoAdCountdown<=0)return;const timer=window.setTimeout(()=>setWelcomeVideoAdCountdown(v=>Math.max(0,v-1)),1000);return()=>window.clearTimeout(timer); },[showWelcomeVideoAd,welcomeVideoAdCountdown]);
-  useEffect(() => { if(!showWelcomeVideoAd)return;const timer=window.setTimeout(()=>{if(!welcomeVideoAdLoaded)setShowWelcomeVideoAd(false);},7000);return()=>window.clearTimeout(timer);},[showWelcomeVideoAd,welcomeVideoAdLoaded]);
+  useEffect(() => { if(!showWelcomeVideoAd)return;const timer=window.setTimeout(()=>{if(!welcomeVideoAdLoaded){setShowWelcomeVideoAd(false);setShowWelcomeModal(true);setWelcomeCountdown(5);}},12000);return()=>window.clearTimeout(timer);},[showWelcomeVideoAd,welcomeVideoAdLoaded]);
   const [showWelcomeModal, setShowWelcomeModal] = useState<boolean>(true);
   const [welcomeCountdown, setWelcomeCountdown] = useState<number>(5);
   const [typedTitleText, setTypedTitleText] = useState<string>('');
@@ -2028,7 +2028,7 @@ LOOK AT THE LIVE CAMERA FRAME IMAGE RIGHT NOW WITH YOUR VISION:
               onCanPlay={() => { setWelcomeVideoAdLoaded(true); welcomeVideoAdRef.current?.play().catch(() => {}); }}
               playsInline
               loop
-              onError={() => { setWelcomeVideoAdLoaded(false); setShowWelcomeVideoAd(false); setWelcomeVideoAdCountdown(0); }}
+              onError={() => { setWelcomeVideoAdLoaded(false); setShowWelcomeVideoAd(false); setWelcomeVideoAdCountdown(0); setShowWelcomeModal(true); setWelcomeCountdown(5); }}
               onClick={() => { if (welcomeVideoAdConfig.linkUrl) window.open(welcomeVideoAdConfig.linkUrl, '_blank', 'noopener,noreferrer'); }}
               className="w-full h-full object-contain bg-black cursor-pointer"
             />
