@@ -2731,7 +2731,8 @@ app.post('/api/admin/users/:id/block', (req, res) => {
   } catch (err:any) { res.status(500).json({ success:false, error:err.message }); }
 });
 
-const SUPABASE_URL = String(process.env.SUPABASE_URL || '').replace(/\/$/, '');
+const SUPABASE_URL_RAW = String(process.env.SUPABASE_URL || '');
+const SUPABASE_URL = SUPABASE_URL_RAW.endsWith('/') ? SUPABASE_URL_RAW.slice(0, -1) : SUPABASE_URL_RAW;
 const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY || '';
 const WELCOME_AD_BUCKET = process.env.SUPABASE_WELCOME_AD_BUCKET || 'welcome-ad-videos';
 const cloudStorageEnabled = Boolean(SUPABASE_URL && SUPABASE_SERVICE_ROLE_KEY);
