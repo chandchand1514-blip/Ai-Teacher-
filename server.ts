@@ -2731,7 +2731,7 @@ app.post('/api/admin/users/:id/block', (req, res) => {
   } catch (err:any) { res.status(500).json({ success:false, error:err.message }); }
 });
 
- app.post('/api/admin/welcome-video-upload', express.raw({type:()=>true,limit:'20mb'}), (req,res)=>{try{const bytes=req.body;if(!Buffer.isBuffer(bytes)||bytes.length===0)return res.status(400).json({success:false,error:'Video file empty hai.'});if(bytes.length>20*1024*1024)return res.status(413).json({success:false,error:'Video maximum 20 MB honi chahiye.'});const mime=String(req.headers['content-type']||'');if(!mime.startsWith('video/'))return res.status(400).json({success:false,error:'Sirf video file upload karein.'});const ext=mime.split('/')[1]?.replace(/[^a-z0-9]/gi,'')||'mp4';const fileName='welcome_ad_video.'+ext;fs.writeFileSync(path.join(DATA_DIR,fileName),bytes);res.json({success:true,videoUrl:'/api/welcome-ad-video',size:bytes.length});}catch(err:any){res.status(500).json({success:false,error:err.message||'Upload failed'});}});
+ app.post('/api/admin/welcome-video-upload', express.raw({type:()=>true,limit:'20mb'}), (req,res)=>{try{const bytes=req.body;if(!Buffer.isBuffer(bytes)||bytes.length===0)return res.status(400).json({success:false,error:'Video file empty hai.'});if(bytes.length>20*1024*1024)return res.status(413).json({success:false,error:'Video maximum 20 MB honi chahiye.'});const mime=String(req.headers['content-type']||'');if(!mime.startsWith('video/'))return res.status(400).json({success:false,error:'Sirf video file upload karein.'});const ext=mime.split('/')[1]?.replace(/[^a-z0-9]/gi,'')||'mp4';const fileName='welcome_ad_video.'+ext;fs.writeFileSync(path.join(DATA_DIR,fileName),bytes);res.json({success:true,videoUrl:`data:${mime};base64,${bytes.toString('base64')}`,size:bytes.length});}catch(err:any){res.status(500).json({success:false,error:err.message||'Upload failed'});}});
 app.get('/api/welcome-ad-video',(req,res)=>{try{const files=fs.readdirSync(DATA_DIR).filter(n=>/^welcome_ad_video\./.test(n));if(!files.length)return res.status(404).end();const file=path.join(DATA_DIR,files[0]);res.setHeader('Content-Type','video/'+files[0].split('.').pop());res.setHeader('Accept-Ranges','bytes');res.sendFile(file);}catch(_){res.status(404).end();}});
 
 // Persisted welcome video ad settings
@@ -2743,7 +2743,7 @@ app.get('/api/admin/welcome-video-ad',(req,res)=>res.json({success:true,config:r
 app.put('/api/admin/welcome-video-ad',(req,res)=>{
   try {
     const body=req.body||{}, videoUrl=String(body.videoUrl||''), linkUrl=String(body.linkUrl||'');
-    if(videoUrl&&!videoUrl.startsWith('data:video/')&&!videoUrl.startsWith('/api/welcome-ad-video'))return res.status(400).json({success:false,error:'Video format invalid'});
+    if(videoUrl&&!videoUrl.startsWith('data:video/')&&!videoUrl.startsWith('/api/welcome-ad-video')&&!/^https?:\\/\\//i.test(videoUrl))return res.status(400).json({success:false,error:'Video format invalid'});
     
     const config={enabled:Boolean(body.enabled),title:String(body.title||'').trim().slice(0,120),videoUrl,linkUrl:linkUrl.slice(0,2000),skipAfterSeconds:Math.max(0,Math.min(60,Number(body.skipAfterSeconds)||0)),updatedAt:new Date().toISOString()};
     saveWelcomeVideoAd(config);res.json({success:true,config});
