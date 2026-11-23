@@ -1717,7 +1717,11 @@ export const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                   <input value={adTitle} onChange={e=>setAdTitle(e.target.value)} placeholder="Ad title" className="px-3 py-2 rounded-xl bg-slate-900 border border-slate-700 text-white text-xs"/>
                   <input value={adLink} onChange={e=>setAdLink(e.target.value)} placeholder="Optional link URL" className="px-3 py-2 rounded-xl bg-slate-900 border border-slate-700 text-white text-xs"/>
-                  <input value={adImageUrl} onChange={e=>setAdImageUrl(e.target.value)} placeholder="Advertisement image URL (https://...)" className="px-3 py-2 rounded-xl bg-slate-900 border border-slate-700 text-white text-xs"/>
+                  <div className="flex flex-col gap-2 px-3 py-2 rounded-xl bg-slate-900 border border-slate-700">
+                  <label className="text-xs text-slate-300 font-semibold">Choose advertisement image from Gallery</label>
+                  <input type="file" accept="image/*" onChange={e=>{const file=e.target.files?.[0]; if(!file)return; if(file.size>4*1024*1024){alert('Image 4 MB se chhoti honi chahiye');e.target.value='';return;} const reader=new FileReader();reader.onload=()=>setAdImageUrl(String(reader.result||''));reader.readAsDataURL(file);}} className="text-xs text-slate-300 file:mr-2 file:px-3 file:py-1.5 file:rounded-lg file:border-0 file:bg-fuchsia-600 file:text-white file:font-bold"/>
+                  {adImageUrl&&<div className="flex items-center gap-2"><img src={adImageUrl} alt="Ad preview" className="w-20 h-20 object-cover rounded-lg border border-slate-700"/><button type="button" onClick={()=>setAdImageUrl('')} className="text-xs text-rose-300">Remove image</button></div>}
+                </div>
                 </div>
                 <textarea value={adText} onChange={e=>setAdText(e.target.value)} placeholder="Advertisement message" rows={2} className="w-full px-3 py-2 rounded-xl bg-slate-900 border border-slate-700 text-white text-xs"/>
                 <input value={adTargets} onChange={e=>setAdTargets(e.target.value)} placeholder="Target user names/device IDs (comma separated; blank = all users)" className="w-full px-3 py-2 rounded-xl bg-slate-900 border border-slate-700 text-white text-xs"/>
