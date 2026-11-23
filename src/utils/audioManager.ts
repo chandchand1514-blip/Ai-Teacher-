@@ -358,8 +358,13 @@ export class LiveAudioSession {
     }
 
     this.onStatusChange?.('connecting', 'Connecting to Jarvis Live AI...');
-    const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-    const wsUrl = `${protocol}//${window.location.host}/live`;
+    // On Vercel, route Live Voice to the Render backend; on Render/local, use same origin.
+    const configuredBackend = (import.meta as any).env?.VITE_LIVE_BACKEND_URL as string | undefined;
+    const backendBase = configuredBackend || (window.location.hostname.endsWith('vercel.app')
+      ? 'https://ai-teacher-rd8u.onrender.com'
+      : window.location.origin);
+    const wsBase = backendBase.replace(/^http:/, 'ws:').replace(/^https:/, 'wss:').replace(/\\/$/, '');
+    const wsUrl = `${wsBase}/live`;
     this.ws = new WebSocket(wsUrl);
 
     this.ws.onopen = () => {
