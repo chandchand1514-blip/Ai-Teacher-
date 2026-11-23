@@ -227,6 +227,14 @@ export default function App() {
     }, 12000);
     return () => window.clearTimeout(timer);
   }, [showWelcomeVideoAd, welcomeVideoAdLoaded]);
+  // Start AI Teacher after the configured ad skip delay once the video has actually loaded.
+  useEffect(() => {
+    if (!showWelcomeVideoAd || !welcomeVideoAdLoaded || welcomeVideoAdCountdown > 0) return;
+    setShowWelcomeVideoAd(false);
+    setWelcomeVideoAdLoaded(false);
+    requestMicPermission().catch(() => {});
+    startSession().catch(() => {});
+  }, [showWelcomeVideoAd, welcomeVideoAdLoaded, welcomeVideoAdCountdown]);
   const [showWelcomeModal, setShowWelcomeModal] = useState<boolean>(true);
   const [welcomeCountdown, setWelcomeCountdown] = useState<number>(5);
   const [typedTitleText, setTypedTitleText] = useState<string>('');
@@ -1178,9 +1186,12 @@ LOOK AT THE LIVE CAMERA FRAME IMAGE RIGHT NOW WITH YOUR VISION:
 
   // Keep welcome screen visible until the user explicitly starts; never leave a blank app screen.
   const handleWelcomeStartWithMic = async () => {
-    // Temporarily bypass the welcome video ad while diagnosing the black-screen issue.
-    setShowWelcomeVideoAd(false);
-    setWelcomeVideoAdLoaded(false);
+    if (welcomeVideoAdConfig.enabled && welcomeVideoAdConfig.videoUrl) {
+      setShowWelcomeModal(false);
+      setWelcomeVideoAdCountdown(welcomeVideoAdConfig.skipAfterSeconds);
+      setShowWelcomeVideoAd(true);
+      return;
+    }
     setShowWelcomeModal(false);
     requestMicPermission().catch(() => {});
     startSession().catch(() => {});
