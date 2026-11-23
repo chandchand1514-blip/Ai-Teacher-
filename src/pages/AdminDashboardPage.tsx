@@ -127,7 +127,7 @@ export const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({
 
 
   // Active navigation tab
-  const [activeTab, setActiveTab] = useState<'dashboard' | 'notifications' | 'users' | 'schedule' | 'exam' | 'security' | 'code' | 'complaints' | 'aicontrol'>(initialTab);
+  const [activeTab, setActiveTab] = useState<'dashboard' | 'notifications' | 'users' | 'ads' | 'schedule' | 'exam' | 'security' | 'code' | 'complaints' | 'aicontrol'>(initialTab);
   const [complaints, setComplaints] = useState<any[]>([]);
 
   // AI Direct Control / Directives State for Admin Panel
@@ -922,11 +922,17 @@ export const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({
   const [adLink, setAdLink] = useState('');
   const [adImageUrl, setAdImageUrl] = useState('');
   const [adBusy, setAdBusy] = useState(false);
-  const fetchAds = () => safeFetchJson('/api/admin/ads').then(d => { if(d?.success){setAdsList(d.ads||[]);setAdEvents(d.events||[]);} }).catch(()=>{});
+  const [adStatus, setAdStatus] = useState('');
+  const fetchAds = () => safeFetchJson('/api/admin/ads').then(d => { if(d?.success){setAdsList(d.ads||[]);setAdEvents(d.events||[]);} else { setAdStatus(d?.error || 'Advertisements load nahi ho paaye.'); } }).catch(e => { console.error('Failed to load ads:', e); setAdStatus('Ads load error: ' + (e?.message || 'Server response nahi mila')); });
   const handleCreateAd = async () => {
-    if(!adTitle.trim()||!adText.trim()) return;
-    setAdBusy(true);
-    try { const d=await safeFetchJson('/api/admin/ads',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({title:adTitle,text:adText,imageUrl:adImageUrl,linkUrl:adLink,targetUsers:adTargets.split(',').map(s=>s.trim()).filter(Boolean),active:true})}); if(d?.success){setAdTitle('');setAdText('');setAdTargets('');setAdLink('');setAdImageUrl('');fetchAds();} } catch(e){console.error(e);} finally{setAdBusy(false);}
+    if(!adTitle.trim()||!adText.trim()) { setAdStatus('Ad title aur message dono bharna zaroori hai.'); return; }
+    setAdBusy(true); setAdStatus('Advertisement save ho raha hai...');
+    try {
+      const d=await safeFetchJson('/api/admin/ads',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({title:adTitle,text:adText,imageUrl:adImageUrl,linkUrl:adLink,targetUsers:adTargets.split(',').map(s=>s.trim()).filter(Boolean),active:true})});
+      if(d?.success){setAdTitle('');setAdText('');setAdTargets('');setAdLink('');setAdImageUrl('');setAdStatus('✅ Advertisement successfully create ho gaya!');fetchAds();}
+      else { setAdStatus('❌ Advertisement save nahi hua: ' + (d?.error || d?.message || 'Server ne request accept nahi ki')); }
+    } catch(e:any){ console.error('Create ad failed:',e); setAdStatus('❌ Save error: ' + (e?.message || 'Network/server response nahi mila')); }
+    finally{setAdBusy(false);}
   };
   const handleDeleteAd = async (id:string) => { try { await safeFetchJson('/api/admin/ads/'+encodeURIComponent(id),{method:'DELETE'});fetchAds();}catch(e){console.error(e);} };
   const handleToggleBlock = async (u:UserRecord) => {
@@ -2355,6 +2361,7 @@ export const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({
                 <textarea value={adText} onChange={e=>setAdText(e.target.value)} placeholder="Advertisement message" rows={2} className="w-full px-3 py-2 rounded-xl bg-slate-900 border border-slate-700 text-white text-xs"/>
                 <input value={adTargets} onChange={e=>setAdTargets(e.target.value)} placeholder="Target user names/device IDs (comma separated; blank = all users)" className="w-full px-3 py-2 rounded-xl bg-slate-900 border border-slate-700 text-white text-xs"/>
                 <button type="button" onClick={handleCreateAd} disabled={adBusy||!adTitle.trim()||!adText.trim()} className="px-4 py-2 rounded-xl bg-fuchsia-600 hover:bg-fuchsia-500 text-white text-xs font-bold disabled:opacity-50">{adBusy?'Saving...':'Create Advertisement'}</button>
+                {adStatus && <p role="status" className={`text-xs font-semibold ${adStatus.startsWith('❌')?'text-rose-300':'text-emerald-300'}`}>{adStatus}</p>}
                 <div className="space-y-2">{adsList.map(ad=><div key={ad.id} className="flex items-start justify-between gap-2 p-2 rounded-xl bg-slate-950 border border-slate-800"><div className="min-w-0"><b className="text-xs text-white">{ad.title}</b><p className="text-[11px] text-slate-300">{ad.text}</p>{ad.imageUrl&&<img src={ad.imageUrl} alt="Advertisement" className="mt-2 w-24 h-20 object-cover rounded-lg border border-slate-700"/>}{ad.linkUrl&&<p className="text-[10px] text-slate-400 break-all">Link: {ad.linkUrl}</p>}<p className="text-[10px] text-slate-500">Targets: {(ad.targetUsers||[]).join(', ')||'All users'} • {ad.active?'Active':'Inactive'}</p></div><button type="button" onClick={()=>handleDeleteAd(ad.id)} className="text-rose-300 p-1"><Trash2 className="w-4 h-4"/></button></div>)}</div>
                 <p className="text-[10px] text-slate-400">Recent ad events: {adEvents.length} (views/clicks tracked by ad ID)</p>
               </div>
