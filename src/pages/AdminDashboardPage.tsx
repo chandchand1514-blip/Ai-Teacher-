@@ -921,6 +921,7 @@ export const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({
   const [adTargets, setAdTargets] = useState('');
   const [adLink, setAdLink] = useState('');
   const [adImageUrl, setAdImageUrl] = useState('');
+  const [adPlacement, setAdPlacement] = useState<'bottom'|'top'|'both'>('bottom');
   const [adBusy, setAdBusy] = useState(false);
   const [adStatus, setAdStatus] = useState('');
   const fetchAds = () => safeFetchJson('/api/admin/ads').then(d => { if(d?.success){setAdsList(d.ads||[]);setAdEvents(d.events||[]);} else { setAdStatus(d?.error || 'Advertisements load nahi ho paaye.'); } }).catch(e => { console.error('Failed to load ads:', e); setAdStatus('Ads load error: ' + (e?.message || 'Server response nahi mila')); });
@@ -928,9 +929,9 @@ export const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({
     if(!adTitle.trim()||!adText.trim()) { setAdStatus('Ad title aur message dono bharna zaroori hai.'); return; }
     setAdBusy(true); setAdStatus('Advertisement save ho raha hai...');
     try {
-      const response=await fetch('/api/admin/ads',{method:'POST',headers:{'Content-Type':'application/json'},credentials:'include',body:JSON.stringify({title:adTitle,text:adText,imageUrl:adImageUrl,linkUrl:adLink,targetUsers:adTargets.split(',').map(s=>s.trim()).filter(Boolean),active:true})});
+      const response=await fetch('/api/admin/ads',{method:'POST',headers:{'Content-Type':'application/json'},credentials:'include',body:JSON.stringify({title:adTitle,text:adText,imageUrl:adImageUrl,linkUrl:adLink,targetUsers:adTargets.split(',').map(s=>s.trim()).filter(Boolean),placement:adPlacement,active:true})});
       let d:any=null; try { d=await response.json(); } catch { d=null; }
-      if(response.ok && d?.success){setAdTitle('');setAdText('');setAdTargets('');setAdLink('');setAdImageUrl('');setAdStatus('✅ Advertisement successfully create ho gaya!');fetchAds();}
+      if(response.ok && d?.success){setAdTitle('');setAdText('');setAdTargets('');setAdLink('');setAdImageUrl('');setAdPlacement('bottom');setAdStatus('✅ Advertisement successfully create ho gaya!');fetchAds();}
       else { const detail=d?.error||d?.message||response.statusText||'Unknown server error'; setAdStatus('❌ Advertisement save nahi hua (HTTP '+response.status+'): '+detail); }
     } catch(e:any){ console.error('Create ad failed:',e); setAdStatus('❌ Save error: ' + (e?.message || 'Network/server response nahi mila')); }
     finally{setAdBusy(false);}
@@ -2360,6 +2361,8 @@ export const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({
                 </div>
                 </div>
                 <textarea value={adText} onChange={e=>setAdText(e.target.value)} placeholder="Advertisement message" rows={2} className="w-full px-3 py-2 rounded-xl bg-slate-900 border border-slate-700 text-white text-xs"/>
+                <label className="block text-xs font-semibold text-slate-300">Advertisement placement</label>
+                <select value={adPlacement} onChange={e=>setAdPlacement(e.target.value as any)} className="w-full px-3 py-2 rounded-xl bg-slate-900 border border-slate-700 text-white text-xs"><option value="bottom">Bottom only</option><option value="top">Top only</option><option value="both">Both (same ad)</option></select>
                 <input value={adTargets} onChange={e=>setAdTargets(e.target.value)} placeholder="Target user names/device IDs (comma separated; blank = all users)" className="w-full px-3 py-2 rounded-xl bg-slate-900 border border-slate-700 text-white text-xs"/>
                 <button type="button" onClick={handleCreateAd} disabled={adBusy||!adTitle.trim()||!adText.trim()} className="px-4 py-2 rounded-xl bg-fuchsia-600 hover:bg-fuchsia-500 text-white text-xs font-bold disabled:opacity-50">{adBusy?'Saving...':'Create Advertisement'}</button>
                 {adStatus && <p role="status" className={`text-xs font-semibold ${adStatus.startsWith('❌')?'text-rose-300':'text-emerald-300'}`}>{adStatus}</p>}
