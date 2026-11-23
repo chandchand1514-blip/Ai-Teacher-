@@ -930,6 +930,11 @@ export const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({
 
   useEffect(() => {
     fetchUsers();
+    // Keep the Admin users directory updated automatically while the panel is open.
+    const usersRefreshTimer = window.setInterval(() => {
+      fetchUsers();
+    }, 5000);
+    return () => window.clearInterval(usersRefreshTimer);
   }, []);
 
   const handleExportUsers = () => {
