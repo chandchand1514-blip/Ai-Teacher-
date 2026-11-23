@@ -110,7 +110,10 @@ export const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({
   onSaveExamResult
 }) => {
   // Authentication & Security State
-  const [isUnlocked, setIsUnlocked] = useState<boolean>(initialVerified !== false);
+  const [isUnlocked, setIsUnlocked] = useState<boolean>(false);
+  const [unlockPasscode, setUnlockPasscode] = useState('');
+  const [unlockError, setUnlockError] = useState('');
+  const [unlockBusy, setUnlockBusy] = useState(false);
 
   // Passcode Change Modal State
   const [isPasscodeModalOpen, setIsPasscodeModalOpen] = useState<boolean>(false);
@@ -1043,11 +1046,7 @@ export const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({
   const [examDueWarning, setExamDueWarning] = useState<string>('');
 
   // Synchronize initial verification prop
-  useEffect(() => {
-    if (initialVerified) {
-      setIsUnlocked(true);
-    }
-  }, [initialVerified]);
+  useEffect(() => { setIsUnlocked(false); }, [initialVerified]);
 
   // Questions generator for selected grade
   const booksForGrade = CLASS_TEXTBOOKS.filter(b => b.grade === selectedGrade);
@@ -1222,7 +1221,17 @@ export const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({
   // ----------------------------------------------------
   // FULL-PAGE PROFESSIONAL ADMIN PANEL (No standalone password keypad page)
   // ----------------------------------------------------
-  void isUnlocked;
+  if (!isUnlocked) return (
+    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-[#030611] p-4 text-slate-100">
+      <form className="w-full max-w-sm rounded-2xl border border-cyan-500/30 bg-[#091526] p-6 space-y-4 shadow-2xl" onSubmit={async (e) => { e.preventDefault(); setUnlockBusy(true); setUnlockError(''); try { const data = await safeFetchJson('/api/admin/verify-passcode', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ passcode: unlockPasscode }) }); if (data?.verified) setIsUnlocked(true); else setUnlockError(data?.error || 'Passcode galat hai'); } catch (err: any) { setUnlockError(err?.message || 'Verification failed'); } finally { setUnlockBusy(false); } }}>
+        <h1 className="text-xl font-black text-center">Admin Panel</h1>
+        <input type="password" inputMode="numeric" autoComplete="current-password" value={unlockPasscode} onChange={e => setUnlockPasscode(e.target.value)} placeholder="Security passcode" className="w-full rounded-xl bg-slate-950 border border-slate-700 p-3 text-center" />
+        {unlockError && <p className="text-sm text-rose-400 text-center">{unlockError}</p>}
+        <button disabled={unlockBusy || !unlockPasscode} className="w-full rounded-xl bg-cyan-600 p-3 font-bold disabled:opacity-50">{unlockBusy ? 'Checking…' : 'Unlock Admin'}</button>
+        <button type="button" onClick={onClose} className="w-full rounded-xl bg-slate-800 p-3 font-bold">Close</button>
+      </form>
+    </div>
+  );
   return (
     <div className="fixed inset-0 z-50 flex flex-col bg-[#050c17] text-slate-100 font-sans select-none overflow-hidden animate-in fade-in">
       
