@@ -3,6 +3,7 @@ import http from 'http';
 import { WebSocketServer, WebSocket } from 'ws';
 import path from 'path';
 import fs from 'fs';
+import crypto from 'crypto';
 import dotenv from 'dotenv';
 import CryptoJS from 'crypto-js';
 import JSZip from 'jszip';
@@ -1136,6 +1137,27 @@ export function upsertActiveLiveSession(
   });
 }
 
+// Admin API authorization: passcode verification issues a short-lived HttpOnly session cookie.
+const adminSessions = new Map<string, number>();
+const adminLoginAttempts = new Map<string, { count: number; resetAt: number }>();
+const ADMIN_SESSION_COOKIE = 'ai_teacher_admin_session';
+const ADMIN_SESSION_TTL_MS = 8 * 60 * 60 * 1000;
+function getAdminSessionToken(req: express.Request): string {
+  const cookies = String(req.headers.cookie || '').split(';');
+  const match = cookies.map(v => v.trim()).find(v => v.startsWith(ADMIN_SESSION_COOKIE + '='));
+  return match ? decodeURIComponent(match.slice(ADMIN_SESSION_COOKIE.length + 1)) : '';
+}
+app.use('/api/admin', (req, res, next) => {
+  if (req.path === '/verify-passcode' || req.path === '/change-passcode' || req.path === '/verify-password') return next();
+  const token = getAdminSessionToken(req);
+  const expires = adminSessions.get(token);
+  if (!token || !expires || expires < Date.now()) {
+    adminSessions.delete(token);
+    return res.status(401).json({ success: false, error: 'Admin authentication required' });
+  }
+  next();
+});
+
 // ----------------------------------------------------
 // ALL REAL USERS DIRECTORY ENDPOINTS FOR ADMIN PANEL (CAPTURES EVERY MOBILE DEVICE)
 // ----------------------------------------------------
@@ -1838,16 +1860,26 @@ app.get('/api/admin/ai-bot/config', (_req, res) => {
 });
 
 // Admin Security Passcode Endpoints
-app.get('/api/admin/passcode', (_req, res) => {
-  res.json({ success: true, passcode: getAdminPasscode() });
-});
 
 app.post('/api/admin/verify-passcode', (req, res) => {
+  const ip = String(req.ip || req.socket.remoteAddress || 'unknown');
+  const now = Date.now();
+  const attempts = adminLoginAttempts.get(ip);
+  if (attempts && attempts.resetAt > now && attempts.count >= 5) {
+    return res.status(429).json({ success: false, verified: false, error: 'Too many attempts. Try again after 15 minutes.' });
+  }
   const { passcode } = req.body;
   const current = getAdminPasscode();
   if (String(passcode || '').trim() === current) {
+    adminLoginAttempts.delete(ip);
+    const token = crypto.randomBytes(32).toString('hex');
+    adminSessions.set(token, Date.now() + ADMIN_SESSION_TTL_MS);
+    res.cookie(ADMIN_SESSION_COOKIE, token, { httpOnly: true, secure: process.env.NODE_ENV === 'production', sameSite: 'strict', maxAge: ADMIN_SESSION_TTL_MS, path: '/api/admin' });
     return res.json({ success: true, verified: true });
   }
+  const nextAttempts = attempts && attempts.resetAt > now ? attempts : { count: 0, resetAt: now + 15 * 60 * 1000 };
+  nextAttempts.count += 1;
+  adminLoginAttempts.set(ip, nextAttempts);
   return res.json({ success: false, verified: false, error: 'Incorrect Security Passcode' });
 });
 
@@ -1865,7 +1897,7 @@ app.post('/api/admin/change-passcode', (req, res) => {
   }
 
   setAdminPasscode(cleanNew);
-  res.json({ success: true, passcode: cleanNew, message: 'Security Passcode badal gaya hai! ✅' });
+  res.json({ success: true, message: 'Security Passcode badal gaya hai! ✅' });
 });
 
 // Track App Download Event from student app & register user automatically

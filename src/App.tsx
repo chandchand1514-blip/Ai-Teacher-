@@ -796,6 +796,9 @@ export default function App() {
 
       if (sessionRef.current) {
         sessionRef.current.updateProfile(displayName, newGrade, roleToUse, languageToUse, adminPassword);
+        if (updatedStudents.length > 1) {
+          sessionRef.current.sendText(`MULTI-STUDENT PROFILE UPDATE: This device has ${updatedStudents.length} students: ${updatedStudents.map((s, i) => `${i + 1}. ${s.name} (${s.grade || 'grade not specified'})`).join('; ')}. Teach and address every student by name. Do not treat the combined profile name as one person. Keep explanations age/grade-appropriate for each student, ask who is answering when needed, and track each student's learning separately as much as the current session supports. The existing students list is authoritative.`);
+        }
       }
     } catch (err) {
       console.error('Failed to save profile:', err);
@@ -1032,15 +1035,6 @@ LOOK AT THE LIVE CAMERA FRAME IMAGE RIGHT NOW WITH YOUR VISION:
     }
   }, [adminRedirect, navigate]);
 
-  useEffect(() => {
-    if (location.pathname === '/admin') {
-      const profileNameLower = (profile.name || '').trim().toLowerCase();
-      const isChandUser = profileNameLower.includes('chand');
-      if (!isChandUser && !isAdminVerified) {
-        navigate('/');
-      }
-    }
-  }, [location.pathname, profile.name, isAdminVerified, navigate]);
 
 
   // Save boardContent & activeExam to localStorage for Session Resume persistence
@@ -1948,11 +1942,7 @@ LOOK AT THE LIVE CAMERA FRAME IMAGE RIGHT NOW WITH YOUR VISION:
 
   if (location.pathname === '/admin') {
     const profileNameLower = (profile.name || '').trim().toLowerCase();
-    const isChandUser = profileNameLower.includes('chand');
-    if (!isChandUser && !isAdminVerified) {
-      return null;
-    }
-    return <AdminPage initialVerified={isAdminVerified || isChandUser} initialTab={adminInitialTab} />;
+    return <AdminPage initialVerified={isAdminVerified} initialTab={adminInitialTab} />;
   }
 
   return (
