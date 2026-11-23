@@ -2743,7 +2743,7 @@ app.get('/api/admin/welcome-video-ad',(req,res)=>res.json({success:true,config:r
 app.put('/api/admin/welcome-video-ad',(req,res)=>{
   try {
     const body=req.body||{}, videoUrl=String(body.videoUrl||''), linkUrl=String(body.linkUrl||'');
-    if(videoUrl&&!videoUrl.startsWith('data:video/')&&!videoUrl.startsWith('/api/welcome-ad-video')&&!/^https?:\\/\\//i.test(videoUrl))return res.status(400).json({success:false,error:'Video format invalid'});
+    if(videoUrl&&!videoUrl.startsWith('data:video/')&&!videoUrl.startsWith('/api/welcome-ad-video')&&!videoUrl.startsWith('http://')&&!videoUrl.startsWith('https://'))return res.status(400).json({success:false,error:'Video format invalid'});
     
     const config={enabled:Boolean(body.enabled),title:String(body.title||'').trim().slice(0,120),videoUrl,linkUrl:linkUrl.slice(0,2000),skipAfterSeconds:Math.max(0,Math.min(60,Number(body.skipAfterSeconds)||0)),updatedAt:new Date().toISOString()};
     saveWelcomeVideoAd(config);res.json({success:true,config});
