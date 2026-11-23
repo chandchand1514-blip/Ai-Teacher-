@@ -1248,6 +1248,7 @@ app.get('/api/admin/users', (req, res) => {
         role: (hasRealName && cleanName.includes('chand')) ? 'Authorized Admin' : effectiveRole,
         studentRole: effectiveRole,
         islamicTitle: rawProf.islamicTitle || (['Mufti', 'Qari', 'Maulana'].includes(effectiveRole) ? effectiveRole : undefined),
+        isBlocked: Boolean(rawProf.isBlocked),
         hasDownloadedApp: Boolean(rawProf.hasDownloadedApp),
         appInstallAction: rawProf.appInstallAction || (rawProf.hasDownloadedApp ? 'App Install Kar Liya Hai ✅' : 'App Not Downloaded'),
         appInstallTimestamp: rawProf.appInstallTimestamp || null,
@@ -2699,6 +2700,64 @@ app.delete('/api/admin/users/:id', (req, res) => {
   } catch (err: any) {
     res.status(500).json({ success: false, error: err.message });
   }
+});
+
+// Admin block/unblock controls
+app.post('/api/admin/users/:id/block', (req, res) => {
+  try {
+    const target = String(req.params.id || '').trim();
+    if (!target) return res.status(400).json({ success:false, error:'User ID required' });
+    const shouldBlock = Boolean(req.body?.blocked);
+    const store = loadAllProfiles();
+    let changed = 0;
+    for (const [key, profile] of Object.entries(store.devices || {}) as [string, any][]) {
+      const name = String(profile?.name || '').trim().toLowerCase();
+      const device = String(profile?.deviceId || key).trim().toLowerCase();
+      if (key.toLowerCase() === target.toLowerCase() || device === target.toLowerCase() || name === target.toLowerCase()) {
+        if (name.includes('chand')) continue;
+        store.devices[key] = { ...profile, isBlocked: shouldBlock, updatedAt: new Date().toISOString() };
+        changed++;
+      }
+    }
+    fs.writeFileSync(MEMORY_FILE, JSON.stringify(store, null, 2), 'utf-8');
+    if (shouldBlock) {
+      for (const [ws, info] of activeLiveSessions.entries()) {
+        if (info.deviceId.toLowerCase() === target.toLowerCase() || info.studentName.toLowerCase() === target.toLowerCase()) {
+          try { ws.send(JSON.stringify({ type:'blocked', message:'Aapka account Admin dwaara block kar diya gaya hai.' })); ws.close(); } catch (_) {}
+        }
+      }
+    }
+    res.json({ success:true, blocked:shouldBlock, changedCount:changed });
+  } catch (err:any) { res.status(500).json({ success:false, error:err.message }); }
+});
+
+// Persistent targeted advertisements (Admin-only management)
+const ADS_FILE = path.join(DATA_DIR, 'targeted_ads.json');
+const AD_EVENTS_FILE = path.join(DATA_DIR, 'targeted_ad_events.json');
+function readAds(): any[] { try { const x=JSON.parse(fs.readFileSync(ADS_FILE,'utf-8')); return Array.isArray(x)?x:[]; } catch (_) { return []; } }
+function saveAds(items:any[]) { fs.writeFileSync(ADS_FILE, JSON.stringify(items,null,2),'utf-8'); }
+function readAdEvents():any[] { try { const x=JSON.parse(fs.readFileSync(AD_EVENTS_FILE,'utf-8')); return Array.isArray(x)?x:[]; } catch (_) { return []; } }
+app.get('/api/admin/ads', (req,res) => res.json({success:true, ads:readAds(), events:readAdEvents().slice(-500).reverse()}));
+app.post('/api/admin/ads', (req,res) => {
+  try {
+    const { title, text, imageUrl, linkUrl, targetUsers, active=true } = req.body || {};
+    if (!String(title||'').trim() || !String(text||'').trim()) return res.status(400).json({success:false,error:'Title and ad text are required'});
+    const ads=readAds(); const item={id:'ad_'+Date.now(),title:String(title).slice(0,120),text:String(text).slice(0,1000),imageUrl:String(imageUrl||'').slice(0,2000),linkUrl:String(linkUrl||'').slice(0,2000),targetUsers:Array.isArray(targetUsers)?targetUsers.map(String):[],active:Boolean(active),createdAt:new Date().toISOString(),updatedAt:new Date().toISOString()};
+    ads.unshift(item); saveAds(ads); res.json({success:true,ad:item,ads});
+  } catch(err:any){res.status(500).json({success:false,error:err.message});}
+});
+app.put('/api/admin/ads/:id', (req,res) => {
+  try { const ads=readAds(); const i=ads.findIndex(a=>a.id===req.params.id); if(i<0)return res.status(404).json({success:false,error:'Ad not found'}); ads[i]={...ads[i],...req.body,id:ads[i].id,updatedAt:new Date().toISOString()}; saveAds(ads); res.json({success:true,ad:ads[i],ads}); }
+  catch(err:any){res.status(500).json({success:false,error:err.message});}
+});
+app.delete('/api/admin/ads/:id', (req,res) => { try { const ads=readAds().filter(a=>a.id!==req.params.id); saveAds(ads); res.json({success:true,ads}); } catch(err:any){res.status(500).json({success:false,error:err.message});} });
+app.get('/api/targeted-ads', (req,res) => {
+  try { const name=String(req.query.studentName||'').trim().toLowerCase(), device=String(req.query.deviceId||'').trim().toLowerCase(); const ads=readAds().filter(a=>a.active && (!Array.isArray(a.targetUsers)||a.targetUsers.length===0||a.targetUsers.some((t:string)=>t.toLowerCase()===name||t.toLowerCase()===device))); res.json({success:true,ads}); }
+  catch(err:any){res.status(500).json({success:false,error:err.message});}
+});
+app.post('/api/targeted-ads/:id/event', (req,res) => {
+  try { const {studentName,deviceId,event='view'}=req.body||{}; const events=readAdEvents(); events.push({id:'evt_'+Date.now(),adId:req.params.id,studentName:String(studentName||'').slice(0,100),deviceId:String(deviceId||'').slice(0,150),event:String(event).slice(0,30),timestamp:new Date().toISOString()}); fs.writeFileSync(AD_EVENTS_FILE,JSON.stringify(events.slice(-5000),null,2),'utf-8'); res.json({success:true}); }
+  catch(err:any){res.status(500).json({success:false,error:err.message});}
 });
 
 // Verify Admin Password Endpoint
