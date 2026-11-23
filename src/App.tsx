@@ -1187,13 +1187,10 @@ LOOK AT THE LIVE CAMERA FRAME IMAGE RIGHT NOW WITH YOUR VISION:
 
   // Keep welcome screen visible until the user explicitly starts; never leave a blank app screen.
   const handleWelcomeStartWithMic = async () => {
-    if (welcomeVideoAdConfig.enabled && welcomeVideoAdConfig.videoUrl) {
-      setShowWelcomeModal(false);
-      setWelcomeVideoAdCountdown(welcomeVideoAdConfig.skipAfterSeconds);
-      setShowWelcomeVideoAd(true);
-      return;
-    }
+    // Reliable startup: do not let the welcome-ad video overlay block AI Teacher.
     setShowWelcomeModal(false);
+    setShowWelcomeVideoAd(false);
+    setWelcomeVideoAdLoaded(false);
     requestMicPermission().catch(() => {});
     startSession().catch(() => {});
   };
