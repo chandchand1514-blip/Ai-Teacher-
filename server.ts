@@ -1542,10 +1542,39 @@ app.get('/api/admin/ai-context', (req, res) => {
     const devices = store.devices || {};
     const profiles = Object.entries(devices).map(([deviceId, raw]: [string, any]) => {
       const p = raw || {};
-      return { deviceId, name: String(p.name || p.studentName || 'Unknown').slice(0, 80), grade: p.grade || '', isBlocked: Boolean(p.isBlocked), hasDownloadedApp: Boolean(p.hasDownloadedApp), visitCount: Number(p.visitCount || 0), lastActivityTimestamp: p.lastActivityTimestamp || p.updatedAt || null, learnedTopics: Array.isArray(p.learnedTopics) ? p.learnedTopics.slice(-50) : [], askedQuestionsHistory: Array.isArray(p.askedQuestionsHistory) ? p.askedQuestionsHistory.slice(-50) : [], badges: Array.isArray(p.badges) ? p.badges : [], students: Array.isArray(p.students) ? p.students.map((s: any) => ({ name: String(s.name || '').slice(0, 80), grade: s.grade || '' })) : [] };
+      return {
+        deviceId, name: String(p.name || p.studentName || 'Unknown').slice(0, 80),
+        grade: p.grade || '', isBlocked: Boolean(p.isBlocked), hasDownloadedApp: Boolean(p.hasDownloadedApp),
+        visitCount: Number(p.visitCount || 0), lastActivityTimestamp: p.lastActivityTimestamp || p.updatedAt || null,
+        learnedTopics: Array.isArray(p.learnedTopics) ? p.learnedTopics.slice(-50) : [],
+        askedQuestionsHistory: Array.isArray(p.askedQuestionsHistory) ? p.askedQuestionsHistory.slice(-50) : [],
+        badges: Array.isArray(p.badges) ? p.badges : [],
+        students: Array.isArray(p.students) ? p.students.map((s: any) => ({ name: String(s.name || '').slice(0, 80), grade: s.grade || '' })) : [],
+      };
     });
-    res.json({ success: true, generatedAt: new Date().toISOString(), totals: { users: profiles.length, blocked: profiles.filter(p => p.isBlocked).length, downloaded: profiles.filter(p => p.hasDownloadedApp).length }, profiles, activeDirectives: getAiDirectives().filter(d => d.active).map(d => ({ id: d.id, commandText: d.commandText, category: d.category })) });
-  } catch (e: any) { res.status(500).json({ success: false, error: e.message }); }
+    let complaints: any[] = [];
+    if (fs.existsSync(COMPLAINTS_FILE)) {
+      try { const parsed = JSON.parse(fs.readFileSync(COMPLAINTS_FILE, 'utf-8')); if (Array.isArray(parsed)) complaints = parsed; } catch (_) {}
+    }
+    let notifications: any[] = [];
+    if (fs.existsSync(NOTIFICATIONS_FILE)) {
+      try { const parsed = JSON.parse(fs.readFileSync(NOTIFICATIONS_FILE, 'utf-8')); if (Array.isArray(parsed)) notifications = parsed; } catch (_) {}
+    }
+    let commandAudit: any[] = [];
+    const auditFile = path.join(DATA_DIR, 'admin_command_audit.json');
+    if (fs.existsSync(auditFile)) {
+      try { const parsed = JSON.parse(fs.readFileSync(auditFile, 'utf-8')); if (Array.isArray(parsed)) commandAudit = parsed.slice(0, 100); } catch (_) {}
+    }
+    const uiConfig = getUiConfig();
+    res.json({
+      success: true, generatedAt: new Date().toISOString(),
+      totals: { users: profiles.length, blocked: profiles.filter(p => p.isBlocked).length, downloaded: profiles.filter(p => p.hasDownloadedApp).length, complaints: complaints.length, notifications: notifications.length },
+      profiles, complaints: complaints.slice(0, 100).map(c => ({ id:c.id, studentName:c.studentName, grade:c.grade, complaint:String(c.complaint || '').slice(0,1000), isRead:Boolean(c.isRead), hasReply:Boolean(c.adminReply), createdAt:c.createdAt })),
+      notifications: notifications.slice(0, 100), uiConfig,
+      activeDirectives: getAiDirectives().filter(d => d.active).map(d => ({ id:d.id, commandText:d.commandText, category:d.category })),
+      recentAdminCommands: commandAudit,
+    });
+  } catch (e: any) { res.status(500).json({ success:false, error:e.message }); }
 });
 
 app.post('/api/admin/ai-directives/toggle', (req, res) => {
