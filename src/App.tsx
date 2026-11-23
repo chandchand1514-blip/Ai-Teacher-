@@ -1163,7 +1163,7 @@ LOOK AT THE LIVE CAMERA FRAME IMAGE RIGHT NOW WITH YOUR VISION:
   // Auto-dismiss welcome modal after 5 seconds: ONLY close modal, do NOT auto start session
   // User explicitly instructed: "Start voice call dabaenge tabhi dikhai Dena chahie usse pahle Nahin dikhai Dena chahie"
   useEffect(() => {
-    if (showWelcomeModal) {
+    if (showWelcomeModal && !showWelcomeVideoAd) {
       const interval = setInterval(() => {
         setWelcomeCountdown((prev) => {
           if (prev <= 1) {
@@ -1176,7 +1176,7 @@ LOOK AT THE LIVE CAMERA FRAME IMAGE RIGHT NOW WITH YOUR VISION:
       }, 1000);
       return () => clearInterval(interval);
     }
-  }, [showWelcomeModal]);
+  }, [showWelcomeModal, showWelcomeVideoAd]);
 
   const handleWelcomeStartWithMic = async () => {
     setShowWelcomeModal(false);
