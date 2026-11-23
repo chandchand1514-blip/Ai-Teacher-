@@ -2749,7 +2749,8 @@ app.put('/api/admin/welcome-video-ad',(req,res)=>{
     saveWelcomeVideoAd(config);res.json({success:true,config});
   }catch(err:any){res.status(500).json({success:false,error:err.message});}
 });
-\n// Persistent targeted advertisements (Admin-only management)
+
+// Persistent targeted advertisements (Admin-only management)
 const ADS_FILE = path.join(DATA_DIR, 'targeted_ads.json');
 const AD_EVENTS_FILE = path.join(DATA_DIR, 'targeted_ad_events.json');
 function readAds(): any[] { try { const x=JSON.parse(fs.readFileSync(ADS_FILE,'utf-8')); return Array.isArray(x)?x:[]; } catch (_) { return []; } }
