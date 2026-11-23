@@ -928,9 +928,10 @@ export const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({
     if(!adTitle.trim()||!adText.trim()) { setAdStatus('Ad title aur message dono bharna zaroori hai.'); return; }
     setAdBusy(true); setAdStatus('Advertisement save ho raha hai...');
     try {
-      const d=await safeFetchJson('/api/admin/ads',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({title:adTitle,text:adText,imageUrl:adImageUrl,linkUrl:adLink,targetUsers:adTargets.split(',').map(s=>s.trim()).filter(Boolean),active:true})});
-      if(d?.success){setAdTitle('');setAdText('');setAdTargets('');setAdLink('');setAdImageUrl('');setAdStatus('✅ Advertisement successfully create ho gaya!');fetchAds();}
-      else { setAdStatus('❌ Advertisement save nahi hua: ' + (d?.error || d?.message || 'Server ne request accept nahi ki')); }
+      const response=await fetch('/api/admin/ads',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({title:adTitle,text:adText,imageUrl:adImageUrl,linkUrl:adLink,targetUsers:adTargets.split(',').map(s=>s.trim()).filter(Boolean),active:true})});
+      let d:any=null; try { d=await response.json(); } catch { d=null; }
+      if(response.ok && d?.success){setAdTitle('');setAdText('');setAdTargets('');setAdLink('');setAdImageUrl('');setAdStatus('✅ Advertisement successfully create ho gaya!');fetchAds();}
+      else { const detail=d?.error||d?.message||response.statusText||'Unknown server error'; setAdStatus('❌ Advertisement save nahi hua (HTTP '+response.status+'): '+detail); }
     } catch(e:any){ console.error('Create ad failed:',e); setAdStatus('❌ Save error: ' + (e?.message || 'Network/server response nahi mila')); }
     finally{setAdBusy(false);}
   };
