@@ -2036,7 +2036,7 @@ LOOK AT THE LIVE CAMERA FRAME IMAGE RIGHT NOW WITH YOUR VISION:
         </div>
       )}
       {/* Welcome Screen on App Open (Full Page) */}
-      {welcomeVideoAdReady && !showWelcomeVideoAd && showWelcomeModal && (
+      {welcomeVideoAdReady && showWelcomeModal && (!showWelcomeVideoAd || !welcomeVideoAdLoaded) && (
         <div className="fixed inset-0 z-50 flex flex-col items-center justify-center p-6 bg-[#030611] animate-in fade-in duration-300">
           <div className="relative w-full max-w-lg bg-gradient-to-b from-[#0a1829] to-[#040b16] border border-cyan-500/40 rounded-3xl p-8 sm:p-12 shadow-[0_0_80px_rgba(6,182,212,0.25)] text-slate-100 flex flex-col items-center text-center gap-6 overflow-hidden">
             {/* Ambient Corner Glows */}
