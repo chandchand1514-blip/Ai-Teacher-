@@ -736,18 +736,25 @@ export default function App() {
 
 
 
-  const handleSaveProfile = async (newName: string, newGrade: string, newRole?: StudentRole, newLanguage?: string, adminPassword?: string) => {
+  const handleSaveProfile = async (newName: string, newGrade: string, newRole?: StudentRole, newLanguage?: string, adminPassword?: string, action?: 'keep' | 'delete' | 'add') => {
     const trimmed = newName.trim();
     const roleToUse = newRole || profile.role || 'Basic User';
     const titleToUse = (roleToUse && roleToUse !== 'Basic User') ? roleToUse : '';
     const languageToUse = newLanguage || profile.preferredLanguage || 'Hinglish';
+    const oldName = (profile.name || '').trim();
+    if (!action && oldName && trimmed && oldName.toLowerCase() !== trimmed.toLowerCase() && !oldName.toLowerCase().includes('chand') && !trimmed.toLowerCase().includes('chand')) {
+      setPendingManualNameChange({ name: trimmed, grade: newGrade, role: roleToUse, language: languageToUse, adminPassword });
+      setNameChangeConfirmation({ oldName, newName: trimmed, source: 'manual' });
+      return;
+    }
+    if (action === 'keep') { setPendingManualNameChange(null); setNameChangeConfirmation(null); return; }
 
-    const updatedStudents: StudentItem[] = trimmed ? [{
-      name: trimmed,
-      grade: newGrade,
-      role: roleToUse,
-      islamicTitle: titleToUse,
-    }] : [];
+
+    const existingStudents: StudentItem[] = profile.students?.length ? profile.students : (profile.name ? [{ name: profile.name, grade: profile.grade || 'Class 2', role: profile.role, islamicTitle: profile.islamicTitle }] : []);
+    const updatedStudents: StudentItem[] = action === 'add'
+      ? [...existingStudents, ...(trimmed && !existingStudents.some(s => s.name.toLowerCase() === trimmed.toLowerCase()) ? [{ name: trimmed, grade: newGrade, role: roleToUse, islamicTitle: titleToUse }] : [])]
+      : trimmed ? [{ name: trimmed, grade: newGrade, role: roleToUse, islamicTitle: titleToUse }] : [];
+    const displayName = updatedStudents.map(s => s.name).join(' & ');
 
     try {
       const data = await safeFetchJson('/api/profile', {
@@ -755,13 +762,14 @@ export default function App() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           deviceId: getDeviceId(),
-          name: trimmed,
+          name: displayName,
           grade: newGrade,
           role: roleToUse,
           islamicTitle: titleToUse,
           preferredLanguage: languageToUse,
           students: updatedStudents,
           adminPassword: adminPassword || '',
+          replacePreviousName: action === 'delete' ? oldName : '',
         }),
       });
 
@@ -773,7 +781,7 @@ export default function App() {
       setProfile((prev) => {
         const updated: StudentProfile = {
           ...prev,
-          name: trimmed,
+          name: displayName,
           grade: newGrade,
           role: roleToUse,
           islamicTitle: titleToUse,
@@ -787,7 +795,7 @@ export default function App() {
       });
 
       if (sessionRef.current) {
-        sessionRef.current.updateProfile(trimmed, newGrade, roleToUse, languageToUse, adminPassword);
+        sessionRef.current.updateProfile(displayName, newGrade, roleToUse, languageToUse, adminPassword);
       }
     } catch (err) {
       console.error('Failed to save profile:', err);
@@ -1005,6 +1013,8 @@ LOOK AT THE LIVE CAMERA FRAME IMAGE RIGHT NOW WITH YOUR VISION:
   });
 
   const sessionRef = useRef<LiveAudioSession | null>(null);
+  const [nameChangeConfirmation, setNameChangeConfirmation] = useState<any>(null);
+  const [pendingManualNameChange, setPendingManualNameChange] = useState<any>(null);
 
   // Save profile to localStorage on change and sync with backend
   useEffect(() => {
@@ -1207,6 +1217,10 @@ LOOK AT THE LIVE CAMERA FRAME IMAGE RIGHT NOW WITH YOUR VISION:
       onAudioLevel: (lvl) => {
         console.log('[LiveAudioSession audio level]:', lvl);
         setAudioLevel(lvl);
+      },
+      onNameChangePending: (data: any) => {
+        setNameChangeConfirmation(data);
+        sessionRef.current?.sendTextMessage(data.message || `Aapka naam ${data.oldName} se ${data.newName} badalne ki request hai. Purana naam rakhne ke liye Keep, purana profile replace karne ke liye Delete, ya dono students rakhne ke liye Add dabayein.`);
       },
       onProfileUpdated: (newProfile: any) => {
         setProfile((prev) => {
@@ -2781,6 +2795,20 @@ LOOK AT THE LIVE CAMERA FRAME IMAGE RIGHT NOW WITH YOUR VISION:
         onSave={handleSaveProfile}
         onDelete={handleDeleteProfile}
       />
+
+      {nameChangeConfirmation && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/80 backdrop-blur-md">
+          <div className="w-full max-w-sm rounded-2xl border border-emerald-400/40 bg-[#07111e] p-4 shadow-2xl text-white">
+            <h3 className="text-base font-bold text-emerald-300 mb-2">Naam badalne ki pushti</h3>
+            <p className="text-sm text-slate-200 mb-4">Purana naam: <b>{nameChangeConfirmation.oldName}</b><br/>Naya naam: <b>{nameChangeConfirmation.newName}</b><br/>Aap kya karna chahte hain?</p>
+            <div className="grid grid-cols-3 gap-2">
+              <button onClick={() => { if (nameChangeConfirmation.source === 'manual') handleSaveProfile(pendingManualNameChange.name, pendingManualNameChange.grade, pendingManualNameChange.role, pendingManualNameChange.language, pendingManualNameChange.adminPassword, 'keep'); else sessionRef.current?.resolveNameChange('keep'); setPendingManualNameChange(null); setNameChangeConfirmation(null); }} className="rounded-lg bg-slate-700 px-3 py-2 text-sm font-bold">Keep</button>
+              <button onClick={() => { if (nameChangeConfirmation.source === 'manual') handleSaveProfile(pendingManualNameChange.name, pendingManualNameChange.grade, pendingManualNameChange.role, pendingManualNameChange.language, pendingManualNameChange.adminPassword, 'delete'); else sessionRef.current?.resolveNameChange('delete'); setPendingManualNameChange(null); setNameChangeConfirmation(null); }} className="rounded-lg bg-rose-700 px-3 py-2 text-sm font-bold">Delete</button>
+              <button onClick={() => { if (nameChangeConfirmation.source === 'manual') handleSaveProfile(pendingManualNameChange.name, pendingManualNameChange.grade, pendingManualNameChange.role, pendingManualNameChange.language, pendingManualNameChange.adminPassword, 'add'); else sessionRef.current?.resolveNameChange('add'); setPendingManualNameChange(null); setNameChangeConfirmation(null); }} className="rounded-lg bg-emerald-700 px-3 py-2 text-sm font-bold">Add</button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* APK Installation Guide & Help Modal */}
       <ApkInstallGuideModal
