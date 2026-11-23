@@ -1218,11 +1218,11 @@ LOOK AT THE LIVE CAMERA FRAME IMAGE RIGHT NOW WITH YOUR VISION:
         console.log('[LiveAudioSession audio level]:', lvl);
         setAudioLevel(lvl);
       },
-      onProfileUpdated: (newProfile: any) => {      onNameChangePending: (data: any) => {
+      onNameChangePending: (data: any) => {
         setNameChangeConfirmation(data);
         sessionRef.current?.sendTextMessage(data.message || `Aapka naam ${data.oldName} se ${data.newName} badalne ki request hai. Purana naam rakhne ke liye Keep, purana profile replace karne ke liye Delete, ya dono students rakhne ke liye Add dabayein.`);
       },
-
+      onProfileUpdated: (newProfile: any) => {
         setProfile((prev) => {
           const newName = newProfile.name !== undefined ? (newProfile.name ? String(newProfile.name).trim() : '') : prev.name;
           const newGrade = newProfile.grade || prev.grade || 'Class 2';
@@ -2796,7 +2796,7 @@ LOOK AT THE LIVE CAMERA FRAME IMAGE RIGHT NOW WITH YOUR VISION:
         onDelete={handleDeleteProfile}
       />
 
-      {/* APK Installation Guide & Help Modal */}      {nameChangeConfirmation && (
+      {nameChangeConfirmation && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/80 backdrop-blur-md">
           <div className="w-full max-w-sm rounded-2xl border border-emerald-400/40 bg-[#07111e] p-4 shadow-2xl text-white">
             <h3 className="text-base font-bold text-emerald-300 mb-2">Naam badalne ki pushti</h3>
@@ -2810,7 +2810,7 @@ LOOK AT THE LIVE CAMERA FRAME IMAGE RIGHT NOW WITH YOUR VISION:
         </div>
       )}
 
-
+      {/* APK Installation Guide & Help Modal */}
       <ApkInstallGuideModal
         isOpen={isApkGuideModalOpen}
         onClose={() => setIsApkGuideModalOpen(false)}
