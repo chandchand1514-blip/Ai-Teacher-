@@ -2742,7 +2742,7 @@ app.post('/api/admin/ads', (req,res) => {
   try {
     const { title, text, imageUrl, linkUrl, targetUsers, active=true } = req.body || {};
     if (!String(title||'').trim() || !String(text||'').trim()) return res.status(400).json({success:false,error:'Title and ad text are required'});
-    const ads=readAds(); const item={id:'ad_'+Date.now(),title:String(title).slice(0,120),text:String(text).slice(0,1000),imageUrl:String(imageUrl||'').slice(0,2000),linkUrl:String(linkUrl||'').slice(0,2000),targetUsers:Array.isArray(targetUsers)?targetUsers.map(String):[],active:Boolean(active),createdAt:new Date().toISOString(),updatedAt:new Date().toISOString()};
+    const ads=readAds(); const item={id:'ad_'+Date.now(),title:String(title).slice(0,120),text:String(text).slice(0,1000),imageUrl:String(imageUrl||'').slice(0,2*1024*1024),linkUrl:String(linkUrl||'').slice(0,2000),targetUsers:Array.isArray(targetUsers)?targetUsers.map(String):[],active:Boolean(active),createdAt:new Date().toISOString(),updatedAt:new Date().toISOString()};
     ads.unshift(item); saveAds(ads); res.json({success:true,ad:item,ads});
   } catch(err:any){res.status(500).json({success:false,error:err.message});}
 });
