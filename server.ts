@@ -1838,9 +1838,6 @@ app.get('/api/admin/ai-bot/config', (_req, res) => {
 });
 
 // Admin Security Passcode Endpoints
-app.get('/api/admin/passcode', (_req, res) => {
-  res.json({ success: true, passcode: getAdminPasscode() });
-});
 
 app.post('/api/admin/verify-passcode', (req, res) => {
   const { passcode } = req.body;
@@ -1865,7 +1862,7 @@ app.post('/api/admin/change-passcode', (req, res) => {
   }
 
   setAdminPasscode(cleanNew);
-  res.json({ success: true, passcode: cleanNew, message: 'Security Passcode badal gaya hai! ✅' });
+  res.json({ success: true, message: 'Security Passcode badal gaya hai! ✅' });
 });
 
 // Track App Download Event from student app & register user automatically
