@@ -228,7 +228,7 @@ export default function App() {
         setShowWelcomeModal(true);
         setWelcomeCountdown(5);
       }
-    }, 4000);
+    }, 2500);
     return () => window.clearTimeout(timer);
   }, [showWelcomeVideoAd]);
   const [showWelcomeModal, setShowWelcomeModal] = useState<boolean>(true);
