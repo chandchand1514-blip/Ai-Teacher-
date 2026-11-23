@@ -914,6 +914,24 @@ export const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({
   const [newStudentGrade, setNewStudentGrade] = useState<GradeLevel>('Class 1');
   const [newStudentStars, setNewStudentStars] = useState<number>(10);
   const [isSubmittingNewUser, setIsSubmittingNewUser] = useState<boolean>(false);
+  const [adsList, setAdsList] = useState<any[]>([]);
+  const [adEvents, setAdEvents] = useState<any[]>([]);
+  const [adTitle, setAdTitle] = useState('');
+  const [adText, setAdText] = useState('');
+  const [adTargets, setAdTargets] = useState('');
+  const [adLink, setAdLink] = useState('');
+  const [adBusy, setAdBusy] = useState(false);
+  const fetchAds = () => safeFetchJson('/api/admin/ads').then(d => { if(d?.success){setAdsList(d.ads||[]);setAdEvents(d.events||[]);} }).catch(()=>{});
+  const handleCreateAd = async () => {
+    if(!adTitle.trim()||!adText.trim()) return;
+    setAdBusy(true);
+    try { const d=await safeFetchJson('/api/admin/ads',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({title:adTitle,text:adText,linkUrl:adLink,targetUsers:adTargets.split(',').map(s=>s.trim()).filter(Boolean),active:true})}); if(d?.success){setAdTitle('');setAdText('');setAdTargets('');setAdLink('');fetchAds();} } catch(e){console.error(e);} finally{setAdBusy(false);}
+  };
+  const handleDeleteAd = async (id:string) => { try { await safeFetchJson('/api/admin/ads/'+encodeURIComponent(id),{method:'DELETE'});fetchAds();}catch(e){console.error(e);} };
+  const handleToggleBlock = async (u:UserRecord) => {
+    try { const d=await safeFetchJson('/api/admin/users/'+encodeURIComponent(u.id)+'/block',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({blocked:!u.isBlocked})}); if(d?.success){setUsersList(prev=>prev.map(x=>x.id===u.id?{...x,isBlocked:!u.isBlocked}:x));setSelectedUserForModal(prev=>prev?.id===u.id?{...prev,isBlocked:!u.isBlocked}:prev);fetchUsers();} }catch(e){console.error(e);}
+  };
+
 
 
 
@@ -928,6 +946,8 @@ export const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({
       .catch(err => console.error('Failed to load users:', err))
       .finally(() => setIsUsersLoading(false));
   };
+
+  useEffect(() => { fetchAds(); }, []);
 
   useEffect(() => {
     fetchUsers();
@@ -1688,6 +1708,20 @@ export const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({
                     <span>Add Student</span>
                   </button>
                 </div>
+              </div>
+
+              {/* Targeted Ads Manager */}
+              <div className="p-4 rounded-2xl bg-[#091526] border border-fuchsia-500/30 space-y-3">
+                <h3 className="text-sm font-black text-fuchsia-200">Targeted Advertisement Manager</h3>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                  <input value={adTitle} onChange={e=>setAdTitle(e.target.value)} placeholder="Ad title" className="px-3 py-2 rounded-xl bg-slate-900 border border-slate-700 text-white text-xs"/>
+                  <input value={adLink} onChange={e=>setAdLink(e.target.value)} placeholder="Optional link URL" className="px-3 py-2 rounded-xl bg-slate-900 border border-slate-700 text-white text-xs"/>
+                </div>
+                <textarea value={adText} onChange={e=>setAdText(e.target.value)} placeholder="Advertisement message" rows={2} className="w-full px-3 py-2 rounded-xl bg-slate-900 border border-slate-700 text-white text-xs"/>
+                <input value={adTargets} onChange={e=>setAdTargets(e.target.value)} placeholder="Target user names/device IDs (comma separated; blank = all users)" className="w-full px-3 py-2 rounded-xl bg-slate-900 border border-slate-700 text-white text-xs"/>
+                <button type="button" onClick={handleCreateAd} disabled={adBusy||!adTitle.trim()||!adText.trim()} className="px-4 py-2 rounded-xl bg-fuchsia-600 hover:bg-fuchsia-500 text-white text-xs font-bold disabled:opacity-50">{adBusy?'Saving...':'Create Advertisement'}</button>
+                <div className="space-y-2">{adsList.map(ad=><div key={ad.id} className="flex items-start justify-between gap-2 p-2 rounded-xl bg-slate-950 border border-slate-800"><div className="min-w-0"><b className="text-xs text-white">{ad.title}</b><p className="text-[11px] text-slate-300">{ad.text}</p><p className="text-[10px] text-slate-500">Targets: {(ad.targetUsers||[]).join(', ')||'All users'} • {ad.active?'Active':'Inactive'}</p></div><button type="button" onClick={()=>handleDeleteAd(ad.id)} className="text-rose-300 p-1"><Trash2 className="w-4 h-4"/></button></div>)}</div>
+                <p className="text-[10px] text-slate-400">Recent ad events: {adEvents.length} (views/clicks tracked by ad ID)</p>
               </div>
 
               {/* Search & Filter Toolbar */}
@@ -3771,6 +3805,14 @@ export const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({
                 {isUserDownloadHidden(selectedUserForModal.deviceId, selectedUserForModal.name) ? 'Show Download' : 'Hide Download'}
               </button>
             </div>
+
+            <button
+              type="button"
+              onClick={() => handleToggleBlock(selectedUserForModal)}
+              className={selectedUserForModal.isBlocked ? 'w-full py-2.5 rounded-2xl bg-emerald-600/20 border border-emerald-500/50 text-emerald-300 font-bold text-xs cursor-pointer' : 'w-full py-2.5 rounded-2xl bg-amber-600/20 border border-amber-500/50 text-amber-300 font-bold text-xs cursor-pointer'}
+            >
+              {selectedUserForModal.isBlocked ? 'Unblock User' : 'Block User'}
+            </button>
 
             <button
               type="button"
