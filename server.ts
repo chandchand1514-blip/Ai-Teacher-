@@ -2731,7 +2731,22 @@ app.post('/api/admin/users/:id/block', (req, res) => {
   } catch (err:any) { res.status(500).json({ success:false, error:err.message }); }
 });
 
-// Persistent targeted advertisements (Admin-only management)
+ // Persisted welcome video ad settings
+const WELCOME_VIDEO_AD_FILE = path.join(DATA_DIR, 'welcome_video_ad.json');
+function readWelcomeVideoAd(): any { try { const x=JSON.parse(fs.readFileSync(WELCOME_VIDEO_AD_FILE,'utf-8')); return x&&typeof x==='object'?x:{enabled:false,videoUrl:'',linkUrl:'',skipAfterSeconds:5}; } catch (_) { return {enabled:false,videoUrl:'',linkUrl:'',skipAfterSeconds:5}; } }
+function saveWelcomeVideoAd(config:any) { fs.writeFileSync(WELCOME_VIDEO_AD_FILE,JSON.stringify(config,null,2),'utf-8'); }
+app.get('/api/welcome-video-ad',(req,res)=>res.json({success:true,config:readWelcomeVideoAd()}));
+app.get('/api/admin/welcome-video-ad',(req,res)=>res.json({success:true,config:readWelcomeVideoAd()}));
+app.put('/api/admin/welcome-video-ad',(req,res)=>{
+  try {
+    const body=req.body||{}, videoUrl=String(body.videoUrl||''), linkUrl=String(body.linkUrl||'');
+    if(videoUrl&&!videoUrl.startsWith('data:video/'))return res.status(400).json({success:false,error:'Video format invalid'});
+    if(videoUrl.length>16*1024*1024)return res.status(400).json({success:false,error:'Video too large. Upload a video maximum 12 MB.'});
+    const config={enabled:Boolean(body.enabled),videoUrl,linkUrl:linkUrl.slice(0,2000),skipAfterSeconds:Math.max(0,Math.min(60,Number(body.skipAfterSeconds)||0)),updatedAt:new Date().toISOString()};
+    saveWelcomeVideoAd(config);res.json({success:true,config});
+  }catch(err:any){res.status(500).json({success:false,error:err.message});}
+});
+\n// Persistent targeted advertisements (Admin-only management)
 const ADS_FILE = path.join(DATA_DIR, 'targeted_ads.json');
 const AD_EVENTS_FILE = path.join(DATA_DIR, 'targeted_ad_events.json');
 function readAds(): any[] { try { const x=JSON.parse(fs.readFileSync(ADS_FILE,'utf-8')); return Array.isArray(x)?x:[]; } catch (_) { return []; } }
