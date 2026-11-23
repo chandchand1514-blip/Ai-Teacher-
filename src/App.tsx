@@ -1165,7 +1165,8 @@ LOOK AT THE LIVE CAMERA FRAME IMAGE RIGHT NOW WITH YOUR VISION:
     return () => clearInterval(timer);
   }, [showWelcomeModal]);
 
-  // Keep welcome screen visible until the user explicitly starts; never leave a blank app screen.\n  const handleWelcomeStartWithMic = async () => {
+  // Keep welcome screen visible until the user explicitly starts; never leave a blank app screen.
+  const handleWelcomeStartWithMic = async () => {
     setShowWelcomeModal(false);
     requestMicPermission().catch(() => {});
     startSession().catch(() => {});
