@@ -1464,6 +1464,78 @@ app.post('/api/admin/ai-directives', (req, res) => {
   }
 });
 
+// Authenticated, allowlisted admin actions. Never execute arbitrary AI-generated code or shell commands.
+app.post('/api/admin/execute-command', (req, res) => {
+  try {
+    const { action, target, value, message } = req.body || {};
+    const cleanTarget = String(target || '').trim();
+    const auditFile = path.join(DATA_DIR, 'admin_command_audit.json');
+    const audit = (entry: any) => {
+      try {
+        const records = fs.existsSync(auditFile) ? JSON.parse(fs.readFileSync(auditFile, 'utf-8')) : [];
+        records.unshift({ ...entry, timestamp: new Date().toISOString() });
+        fs.writeFileSync(auditFile, JSON.stringify(records.slice(0, 500), null, 2), 'utf-8');
+      } catch (err) { console.error('Admin command audit write failed:', err); }
+    };
+    let result: any;
+    switch (String(action || '')) {
+      case 'block_user':
+        if (!cleanTarget) return res.status(400).json({ success:false, error:'Target user name or device ID required' });
+        result = blockUserOrDevice(cleanTarget); break;
+      case 'unblock_user':
+        if (!cleanTarget) return res.status(400).json({ success:false, error:'Target user name or device ID required' });
+        result = unblockUserOrDevice(cleanTarget); break;
+      case 'download_button':
+        if (typeof value !== 'boolean') return res.status(400).json({ success:false, error:'value must be true/false' });
+        const cfg = getUiConfig();
+        const updated = { ...cfg, downloadButtonVisible: value };
+        saveUiConfig(updated);
+        try {
+          const appCfg = getAppConfig();
+          fs.writeFileSync(APP_CONFIG_FILE, JSON.stringify({ ...appCfg, isDownloadButtonVisible:value, updatedAt:new Date().toISOString(), updatedBy:'Admin Command' }, null, 2), 'utf-8');
+        } catch (_) {}
+        broadcastUiConfigToClients(updated);
+        result = { success:true, message: value ? 'Download button enabled globally' : 'Download button hidden globally' }; break;
+      case 'user_download':
+        if (!cleanTarget || typeof value !== 'boolean') return res.status(400).json({ success:false, error:'Target and boolean value required' });
+        const profileStore = loadAllProfiles();
+        const matched = Object.entries(profileStore.devices || {}).filter(([id, p]: [string, any]) => id.toLowerCase() === cleanTarget.toLowerCase() || String(p?.name || '').toLowerCase() === cleanTarget.toLowerCase());
+        if (!matched.length) return res.status(404).json({ success:false, error:'User/device not found' });
+        const appConfig = getAppConfig();
+        const hiddenDevices = Array.isArray(appConfig.hiddenDevices) ? [...appConfig.hiddenDevices] : [];
+        const hiddenUsers = Array.isArray(appConfig.hiddenUsers) ? [...appConfig.hiddenUsers] : [];
+        for (const [id, p] of matched) {
+          if (value) { if (!hiddenDevices.includes(id)) hiddenDevices.push(id); if (p?.name && !hiddenUsers.some((n:string)=>n.toLowerCase()===String(p.name).toLowerCase())) hiddenUsers.push(p.name); }
+          else { const nextDevices=hiddenDevices.filter(d=>d!==id); hiddenDevices.splice(0,hiddenDevices.length,...nextDevices); if(p?.name){const nextUsers=hiddenUsers.filter((n:string)=>n.toLowerCase()!==String(p.name).toLowerCase()); hiddenUsers.splice(0,hiddenUsers.length,...nextUsers);} }
+        }
+        const nextAppConfig={...appConfig,hiddenDevices,hiddenUsers,updatedAt:new Date().toISOString()};
+        fs.writeFileSync(APP_CONFIG_FILE, JSON.stringify(nextAppConfig,null,2),'utf-8');
+        result={success:true,message:value?'Download hidden for matched user(s)':'Download enabled for matched user(s)',matchedCount:matched.length}; break;
+      case 'announcement':
+        const announcement = String(message || '').trim();
+        if (!announcement) return res.status(400).json({ success:false, error:'Announcement text required' });
+        const list = getAiDirectives();
+        const directive: AiDirectiveItem = { id:'dir_'+Date.now(), commandText:announcement, category:'custom', active:true, createdAt:new Date().toISOString(), createdBy:'Authenticated Admin Command' };
+        list.unshift(directive); saveAiDirectives(list);
+        for (const [ws, info] of activeLiveSessions.entries()) {
+          if (!info.isChandAdmin && info.liveSession) { try { info.liveSession.sendRealtimeInput({ text:`[ADMIN ANNOUNCEMENT]: ${announcement}` }); } catch (_) {} }
+          try { if(ws.readyState===WebSocket.OPEN) ws.send(JSON.stringify({type:'ai_directive_added',directive,directives:list})); } catch (_) {}
+        }
+        result={success:true,message:'Announcement saved and sent to connected student sessions',directive}; break;
+      case 'clear_complaints':
+        fs.writeFileSync(COMPLAINTS_FILE, JSON.stringify([],null,2),'utf-8');
+        result={success:true,message:'All complaints cleared'}; break;
+      case 'clear_notifications':
+        fs.writeFileSync(NOTIFICATIONS_FILE, JSON.stringify([],null,2),'utf-8');
+        result={success:true,message:'All notifications cleared'}; break;
+      default:
+        return res.status(400).json({ success:false, error:'Unsupported action. Allowed: block_user, unblock_user, download_button, user_download, announcement, clear_complaints, clear_notifications' });
+    }
+    audit({ action, target:cleanTarget || undefined, value, message:action==='announcement'?String(message).slice(0,500):undefined, success:Boolean(result?.success), result:result?.message || result });
+    res.json({ success:Boolean(result?.success), result });
+  } catch (e:any) { res.status(500).json({ success:false, error:e.message }); }
+});
+
 app.get('/api/admin/ai-context', (req, res) => {
   try {
     const store = loadAllProfiles();
