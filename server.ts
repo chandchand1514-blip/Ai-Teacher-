@@ -1024,6 +1024,7 @@ app.post('/api/device/register', (req, res) => {
 
 app.post('/api/profile', (req, res) => {
   const { name, grade, role, islamicTitle, preferredLanguage, hasDownloadedApp, deviceId, deviceType, deleteName, action, ...rest } = req.body;
+  const replacePreviousName = String(req.body.replacePreviousName || '').trim();
 
   const cleanDevId = (deviceId && typeof deviceId === 'string' && deviceId.trim()) ? deviceId.trim() : 'default_device';
   const key = cleanDevId;
@@ -1092,6 +1093,9 @@ app.post('/api/profile', (req, res) => {
     deleteUserOrDevice(existing.name, { permanent: false });
   }
 
+  if (replacePreviousName && replacePreviousName.toLowerCase() !== updatedName.toLowerCase() && !replacePreviousName.toLowerCase().includes('chand')) {
+    deleteUserOrDevice(replacePreviousName, { permanent: false });
+  }
   saveServerProfile(updated, key);
   res.json({ success: true, profile: updated });
 });
@@ -5079,6 +5083,8 @@ const server = http.createServer(app);
 // WebSocket Server for Gemini Live API Voice Conversations (gemini-3.8-live)
 const wss = new WebSocketServer({ server, path: '/live' });
 
+const pendingNameChanges = new Map<string, { oldProfile: ServerProfile; proposedProfile: ServerProfile; oldName: string; newName: string; proposedStudents: StudentItem[] }>();
+
 wss.on('error', (err: any) => {
   console.warn('[Live WebSocketServer Warning]:', err?.message || err);
 });
@@ -6490,7 +6496,18 @@ ${activeDirectives.map((d, i) => `    ${i + 1}. "${d.commandText}"`).join('\n')}
                       continue;
                     }
 
-                    const primaryStudent = updatedStudentsList[0];
+                    const primaryStudent = updatedStudentsList[0];                    const currentProfileForNameChange = loadServerProfile(activeDeviceId);
+                    const currentNameForNameChange = String(currentProfileForNameChange.name || '').trim();
+                    const proposedNameForNameChange = updatedStudentsList.map((s: StudentItem) => s.name).join(' & ').trim();
+                    if (currentNameForNameChange && proposedNameForNameChange && currentNameForNameChange.toLowerCase() !== proposedNameForNameChange.toLowerCase() && !currentNameForNameChange.toLowerCase().includes('chand') && !proposedNameForNameChange.toLowerCase().includes('chand')) {
+                      const proposedProfile: ServerProfile = { ...currentProfileForNameChange, name: proposedNameForNameChange, grade: updatedStudentsList[0].grade, role: detectedRole || updatedStudentsList[0].role || currentProfileForNameChange.role || 'Basic User', islamicTitle: detectedTitle || currentProfileForNameChange.islamicTitle, students: updatedStudentsList, lastTopic: (args?.topic && typeof args.topic === 'string') ? args.topic.trim() : lastTopic, updatedAt: new Date().toISOString() };
+                      pendingNameChanges.set(activeDeviceId, { oldProfile: currentProfileForNameChange, proposedProfile, oldName: currentNameForNameChange, newName: proposedNameForNameChange, proposedStudents: updatedStudentsList });
+                      clientWs.send(JSON.stringify({ type: 'name_change_pending', oldName: currentNameForNameChange, newName: proposedNameForNameChange, message: 'Keep purana naam, Delete purana profile replace, ya Add dono students.' }));
+                      toolResults.set(callKey, { success: true, pendingConfirmation: true, message: 'Confirmation popup is open. Do not save the new name until the user chooses Keep, Delete, or Add.' });
+                      continue;
+                    }
+
+
                     const cleanTopic = (args.topic && typeof args.topic === 'string') ? args.topic.trim() : lastTopic;
                     
                     const finalRole = isRoleRemoval ? 'Basic User' : (detectedRole || primaryStudent.role || (serverProfile.role !== 'Basic User' ? serverProfile.role : 'Basic User'));
@@ -8396,6 +8413,31 @@ ${activeDirectives.map((d, i) => `    ${i + 1}. "${d.commandText}"`).join('\n')}
 
       if (parsed.type === 'init') {
         initLiveSession(parsed.profile);
+      } else if (parsed.type === 'resolve_name_change') {
+        const pending = pendingNameChanges.get(activeDeviceId);
+        const action = String(parsed.action || '').toLowerCase();
+        if (pending && ['keep', 'delete', 'add'].includes(action)) {
+          pendingNameChanges.delete(activeDeviceId);
+          if (action === 'keep') {
+            clientWs.send(JSON.stringify({ type: 'profile_updated', profile: pending.oldProfile }));
+            if (liveSession) liveSession.sendRealtimeInput({ text: '[NAME CHANGE CANCELLED]: User chose Keep. Retain the old name/profile.' });
+          } else {
+            const finalProfile: ServerProfile = { ...pending.proposedProfile };
+            if (action === 'add') {
+              const oldStudents = Array.isArray(pending.oldProfile.students) && pending.oldProfile.students.length ? pending.oldProfile.students : [{ name: pending.oldProfile.name || pending.oldName, grade: pending.oldProfile.grade || 'Class 2', role: pending.oldProfile.role }];
+              const additions = pending.proposedStudents.filter((s: StudentItem) => !oldStudents.some((o: StudentItem) => o.name.toLowerCase() === s.name.toLowerCase()));
+              finalProfile.students = [...oldStudents, ...additions];
+              finalProfile.name = finalProfile.students.map((s: StudentItem) => s.name).join(' & ');
+            } else {
+              finalProfile.students = pending.proposedStudents;
+              finalProfile.name = pending.newName;
+              deleteUserOrDevice(pending.oldName, { permanent: false });
+            }
+            saveServerProfile(finalProfile, activeDeviceId);
+            upsertActiveLiveSession(clientWs, { deviceId: activeDeviceId, studentName: finalProfile.name || '', isChandAdmin: false, lastActivity: Date.now() });
+            clientWs.send(JSON.stringify({ type: 'profile_updated', profile: finalProfile }));
+            if (liveSession) liveSession.sendRealtimeInput({ text: '[NAME CHANGE CONFIRMED]: User chose ' + action.toUpperCase() + '. Profile saved. Address the student as ' + finalProfile.name + '.' });
+          }
       } else if (parsed.type === 'update_role') {
         const newRole = String(parsed.role || 'Basic User').trim();
         const newGrade = parsed.grade ? String(parsed.grade).trim() : undefined;
