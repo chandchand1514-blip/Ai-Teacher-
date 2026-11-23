@@ -215,7 +215,22 @@ export default function App() {
   }, []);
   useEffect(() => { if(showWelcomeVideoAd)setWelcomeVideoAdLoaded(false); }, [showWelcomeVideoAd, welcomeVideoAdConfig.videoUrl]);
   useEffect(() => { if(!showWelcomeVideoAd||welcomeVideoAdCountdown<=0)return;const timer=window.setTimeout(()=>setWelcomeVideoAdCountdown(v=>Math.max(0,v-1)),1000);return()=>window.clearTimeout(timer); },[showWelcomeVideoAd,welcomeVideoAdCountdown]);
-  useEffect(() => { if(!showWelcomeVideoAd)return;const timer=window.setTimeout(()=>{const video=welcomeVideoAdRef.current;const actuallyPlaying=Boolean(video&&video.readyState>=2&&video.videoWidth>0&&video.videoHeight>0&&!video.paused);if(!actuallyPlaying){setShowWelcomeVideoAd(false);setWelcomeVideoAdLoaded(false);setWelcomeVideoAdCountdown(0);setShowWelcomeModal(true);setWelcomeCountdown(5);}},5000);return()=>clearTimeout(timer);},[showWelcomeVideoAd,welcomeVideoAdLoaded]);
+  // Never allow a failed or blocked video ad to leave the app on a black screen.
+  useEffect(() => {
+    if (!showWelcomeVideoAd) return;
+    const timer = window.setTimeout(() => {
+      const video = welcomeVideoAdRef.current;
+      const playing = Boolean(video && !video.paused && !video.ended && video.readyState >= 2);
+      if (!playing) {
+        setShowWelcomeVideoAd(false);
+        setWelcomeVideoAdLoaded(false);
+        setWelcomeVideoAdCountdown(0);
+        setShowWelcomeModal(true);
+        setWelcomeCountdown(5);
+      }
+    }, 4000);
+    return () => window.clearTimeout(timer);
+  }, [showWelcomeVideoAd]);
   const [showWelcomeModal, setShowWelcomeModal] = useState<boolean>(true);
   const [welcomeCountdown, setWelcomeCountdown] = useState<number>(5);
   const [typedTitleText, setTypedTitleText] = useState<string>('');
