@@ -2105,22 +2105,28 @@ LOOK AT THE LIVE CAMERA FRAME IMAGE RIGHT NOW WITH YOUR VISION:
             </button>
           )}
 
-          {/* Download Button: Placed directly below the student name badge */}
-          {isDownloadButtonVisible && uiConfig.downloadButtonVisible !== false && (!uiConfig.downloadButtonOnlyWhenLive || isLiveActive) && (
-            <button
-              type="button"
-              onClick={handleDownloadAppClick}
-              title="Download AI Teacher Android APK"
-              className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-gradient-to-r from-emerald-950/90 via-teal-900/80 to-emerald-950/90 hover:from-emerald-900 hover:to-teal-800 border border-emerald-400/60 hover:border-emerald-300 text-emerald-200 hover:text-white shadow-[0_0_15px_rgba(16,185,129,0.35)] cursor-pointer transition-all active:scale-95 shrink-0 group text-[10px] font-bold tracking-wide backdrop-blur-md"
-            >
-              <Download className="w-3 h-3 text-emerald-300 group-hover:translate-y-0.5 transition-transform shrink-0" />
-              <span className="font-extrabold tracking-tight leading-none">{uiConfig.downloadButtonText || 'Download APK'}</span>
-              {profile.hasDownloadedApp ? (
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 shadow-[0_0_6px_#34d399] shrink-0" title="App Installed" />
-              ) : (
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping shrink-0" />
-              )}
-            </button>
+          {/* Second Advertisement: replaces the Download button in the header */}
+          {targetedAds.length > 0 && Boolean(profile.name?.trim()) && Boolean(profile.grade?.trim()) && !profile.hasDownloadedApp && Date.now() >= adDismissedUntil && (
+            <div className="w-full max-w-sm px-1 text-left">
+              {targetedAds.map(ad => {
+                const adContent = (
+                  <div className="flex items-center gap-3 w-full rounded-full bg-gradient-to-r from-slate-800/95 via-slate-700/90 to-indigo-900/90 border border-white/20 p-2.5 pr-10 shadow-[0_6px_24px_rgba(0,0,0,0.35)] backdrop-blur-sm relative">
+                    {ad.imageUrl && <img src={ad.imageUrl} alt={ad.title || 'Ad image'} className="block w-14 h-14 shrink-0 rounded-xl object-cover border border-white/30 bg-slate-900" loading="eager" onError={(e)=>{e.currentTarget.alt='Advertisement image could not load'; console.warn('Advertisement image failed to load', ad.id);}} />}
+                    <div className="min-w-0 flex-1"><h3 className="text-xs font-extrabold text-white line-clamp-2">{ad.title}</h3><p className="text-[10px] text-slate-200 line-clamp-2 mt-1">{ad.text}</p><span className="inline-flex mt-1 text-[9px] font-bold text-cyan-300">Tap to open ↗</span></div>
+                  </div>
+                );
+                return (
+                  <div key={'header-' + ad.id} className="relative">
+                    {ad.linkUrl ? (
+                      <a href={ad.linkUrl} target="_blank" rel="noopener noreferrer" onClick={()=>trackTargetedAd(ad.id,'click')} className="block w-full cursor-pointer active:scale-[0.98] transition-transform">
+                        {adContent}
+                      </a>
+                    ) : adContent}
+                    <button type="button" aria-label="Temporarily hide advertisement" title="Hide ad for 10 minutes" onClick={dismissAdTemporarily} className="absolute right-2 top-2 z-10 w-6 h-6 rounded-full bg-black/60 hover:bg-black/80 border border-white/30 text-white flex items-center justify-center text-xs">✕</button>
+                  </div>
+                );
+              })}
+            </div>
           )}
 
           {Boolean(uiConfig.customBannerText?.trim()) && (
