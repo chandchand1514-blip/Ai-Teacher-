@@ -2022,6 +2022,7 @@ LOOK AT THE LIVE CAMERA FRAME IMAGE RIGHT NOW WITH YOUR VISION:
               muted={welcomeVideoAdMuted}
               playsInline
               loop
+              onError={() => { setShowWelcomeVideoAd(false); setWelcomeVideoAdCountdown(0); }}
               onClick={() => { if (welcomeVideoAdConfig.linkUrl) window.open(welcomeVideoAdConfig.linkUrl, '_blank', 'noopener,noreferrer'); }}
               className="w-full h-full object-contain bg-black cursor-pointer"
             />
