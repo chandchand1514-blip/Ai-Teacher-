@@ -2110,7 +2110,7 @@ LOOK AT THE LIVE CAMERA FRAME IMAGE RIGHT NOW WITH YOUR VISION:
             <div className="w-full max-w-sm px-1 text-left">
               {targetedAds.map(ad => {
                 const adContent = (
-                  <div className="flex items-center gap-3 w-full rounded-full bg-gradient-to-r from-slate-800/95 via-slate-700/90 to-indigo-900/90 border border-white/20 p-2.5 pr-10 shadow-[0_6px_24px_rgba(0,0,0,0.35)] backdrop-blur-sm relative">
+                  <div className="flex items-center gap-3 w-full rounded-full bg-gradient-to-r from-slate-800 via-slate-700 to-indigo-900 border-2 border-white/30 p-2.5 pr-10 shadow-[0_6px_24px_rgba(0,0,0,0.45)] relative min-h-[76px]">
                     {ad.imageUrl && <img src={ad.imageUrl} alt={ad.title || 'Ad image'} className="block w-14 h-14 shrink-0 rounded-xl object-cover border border-white/30 bg-slate-900" loading="eager" onError={(e)=>{e.currentTarget.alt='Advertisement image could not load'; console.warn('Advertisement image failed to load', ad.id);}} />}
                     <div className="min-w-0 flex-1"><h3 className="text-xs font-extrabold text-white line-clamp-2">{ad.title}</h3><p className="text-[10px] text-slate-200 line-clamp-2 mt-1">{ad.text}</p><span className="inline-flex mt-1 text-[9px] font-bold text-cyan-300">Tap to open ↗</span></div>
                   </div>
@@ -2236,7 +2236,7 @@ LOOK AT THE LIVE CAMERA FRAME IMAGE RIGHT NOW WITH YOUR VISION:
               <div className="w-full max-w-sm px-1 text-left">
                 {targetedAds.map(ad => {
                   const adContent = (
-                    <div className="flex items-center gap-3 w-full rounded-full bg-gradient-to-r from-slate-800/95 via-slate-700/90 to-indigo-900/90 border border-white/20 p-2.5 pr-10 shadow-[0_6px_24px_rgba(0,0,0,0.35)] backdrop-blur-sm relative">
+                    <div className="flex items-center gap-3 w-full rounded-full bg-gradient-to-r from-slate-800 via-slate-700 to-indigo-900 border-2 border-white/30 p-2.5 pr-10 shadow-[0_6px_24px_rgba(0,0,0,0.45)] relative min-h-[76px]">
                       {ad.imageUrl && <img src={ad.imageUrl} alt={ad.title||'Ad image'} className="block w-20 h-20 shrink-0 rounded-xl object-cover border border-white/30 bg-slate-900" loading="eager" onError={(e)=>{e.currentTarget.alt='Advertisement image could not load'; console.warn('Advertisement image failed to load', ad.id);}} />}
                       <div className="min-w-0 flex-1"><h3 className="text-sm font-extrabold text-white line-clamp-2">{ad.title}</h3><p className="text-xs text-slate-200 line-clamp-2 mt-1">{ad.text}</p><span className="inline-flex mt-1.5 text-[10px] font-bold text-cyan-300">Tap to open ↗</span></div>
                     </div>
