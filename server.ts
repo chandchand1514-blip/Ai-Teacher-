@@ -8734,7 +8734,7 @@ async function startServer() {
     (process.argv[1] || '').endsWith(path.join('dist', 'server.js'));
 
   // Ensure /public assets remain accessible in both dev and production builds
-  app.use('/public', express.static(path.join(DATA_DIR, 'public')));
+  app.use('/public', express.static(path.resolve(process.cwd(), 'public')));
 
   if (!isProd) {
     const { createServer: createViteServer } = await import('vite');
@@ -8747,7 +8747,7 @@ async function startServer() {
     });
     app.use(vite.middlewares);
   } else {
-    const distPath = path.join(DATA_DIR, 'dist');
+    const distPath = path.resolve(process.cwd(), 'dist');
     app.use(express.static(distPath));
     app.get('*', (req, res) => {
       res.sendFile(path.resolve(distPath, 'index.html'));
