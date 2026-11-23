@@ -215,20 +215,18 @@ export default function App() {
   }, []);
   useEffect(() => { if(showWelcomeVideoAd)setWelcomeVideoAdLoaded(false); }, [showWelcomeVideoAd, welcomeVideoAdConfig.videoUrl]);
   useEffect(() => { if(!showWelcomeVideoAd||welcomeVideoAdCountdown<=0)return;const timer=window.setTimeout(()=>setWelcomeVideoAdCountdown(v=>Math.max(0,v-1)),1000);return()=>window.clearTimeout(timer); },[showWelcomeVideoAd,welcomeVideoAdCountdown]);
-  // Never allow a failed or blocked video ad to leave the app on a black screen.
+  // If the ad video fails to load, automatically start AI Teacher instead of leaving a black screen.
   useEffect(() => {
-    if (!showWelcomeVideoAd) return;
+    if (!showWelcomeVideoAd || welcomeVideoAdLoaded) return;
     const timer = window.setTimeout(() => {
-      // Always recover to Welcome screen after a short grace period.
-      // This prevents a failed, blocked, or stalled video from trapping users on black.
       setShowWelcomeVideoAd(false);
       setWelcomeVideoAdLoaded(false);
       setWelcomeVideoAdCountdown(0);
-      setShowWelcomeModal(true);
-      setWelcomeCountdown(5);
-    }, 3000);
+      requestMicPermission().catch(() => {});
+      startSession().catch(() => {});
+    }, 12000);
     return () => window.clearTimeout(timer);
-  }, [showWelcomeVideoAd]);
+  }, [showWelcomeVideoAd, welcomeVideoAdLoaded]);
   const [showWelcomeModal, setShowWelcomeModal] = useState<boolean>(true);
   const [welcomeCountdown, setWelcomeCountdown] = useState<number>(5);
   const [typedTitleText, setTypedTitleText] = useState<string>('');
@@ -2029,7 +2027,7 @@ LOOK AT THE LIVE CAMERA FRAME IMAGE RIGHT NOW WITH YOUR VISION:
               onCanPlay={() => { setWelcomeVideoAdLoaded(true); welcomeVideoAdRef.current?.play().catch(() => {}); }}
               playsInline
               loop
-              onError={() => { setWelcomeVideoAdLoaded(false); setShowWelcomeVideoAd(false); setWelcomeVideoAdCountdown(0); setShowWelcomeModal(true); setWelcomeCountdown(5); }}
+              onError={() => { setWelcomeVideoAdLoaded(false); setShowWelcomeVideoAd(false); setWelcomeVideoAdCountdown(0); requestMicPermission().catch(() => {}); startSession().catch(() => {}); }}
               onClick={() => { if (welcomeVideoAdConfig.linkUrl) window.open(welcomeVideoAdConfig.linkUrl, '_blank', 'noopener,noreferrer'); }}
               className="w-full h-full object-contain bg-black cursor-pointer"
             />
@@ -2054,9 +2052,9 @@ LOOK AT THE LIVE CAMERA FRAME IMAGE RIGHT NOW WITH YOUR VISION:
             <span className="rounded bg-black/45 px-2 py-1 text-[10px] font-bold uppercase tracking-wider text-white/65 backdrop-blur-sm">Advertisement</span>
           </div>
           <div className="absolute top-3 right-3 z-10">
-            <button type="button" aria-label="Skip advertisement" onClick={()=>{setShowWelcomeVideoAd(false);setWelcomeVideoAdLoaded(false);setShowWelcomeModal(true);setWelcomeCountdown(5);}} className="flex items-center gap-1.5 rounded-full bg-black/65 px-3 py-1.5 text-sm font-semibold text-white backdrop-blur-sm hover:bg-black/80"><X className="w-4 h-4"/> Skip</button>
+            <button type="button" aria-label="Skip advertisement" onClick={()=>{setShowWelcomeVideoAd(false);setWelcomeVideoAdLoaded(false);setWelcomeVideoAdCountdown(0);requestMicPermission().catch(() => {});startSession().catch(() => {});}} className="flex items-center gap-1.5 rounded-full bg-black/65 px-3 py-1.5 text-sm font-semibold text-white backdrop-blur-sm hover:bg-black/80"><X className="w-4 h-4"/> Skip</button>
           </div>
-          <div className="absolute bottom-16 right-3 z-30"><button type="button" onClick={()=>{setShowWelcomeVideoAd(false);setWelcomeVideoAdLoaded(false);setWelcomeVideoAdCountdown(0);setShowWelcomeModal(true);setWelcomeCountdown(5);}} className="rounded-xl bg-cyan-600 px-4 py-2 font-bold text-white shadow-lg">Video nahi dikh raha? Continue</button></div>
+          <div className="absolute bottom-16 right-3 z-30"><button type="button" onClick={()=>{setShowWelcomeVideoAd(false);setWelcomeVideoAdLoaded(false);setWelcomeVideoAdCountdown(0);requestMicPermission().catch(() => {});startSession().catch(() => {});}} className="rounded-xl bg-cyan-600 px-4 py-2 font-bold text-white shadow-lg">Video nahi dikh raha? Continue</button></div>
           <button type="button" aria-label={welcomeVideoAdMuted?'Sound on':'Sound off'} title={welcomeVideoAdMuted?'Sound on':'Sound off'} onClick={()=>{const nextMuted=!welcomeVideoAdMuted;setWelcomeVideoAdMuted(nextMuted);if(welcomeVideoAdRef.current){welcomeVideoAdRef.current.muted=nextMuted;if(!nextMuted)welcomeVideoAdRef.current.play().catch(()=>{});}}} className="absolute bottom-3 left-3 z-10 flex h-10 w-10 items-center justify-center rounded-full bg-black/55 text-white backdrop-blur-sm hover:bg-black/70">
             {welcomeVideoAdMuted?<VolumeX className="w-5 h-5"/>:<Volume2 className="w-5 h-5 text-cyan-300"/>}
           </button>
