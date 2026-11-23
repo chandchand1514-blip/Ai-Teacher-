@@ -59,7 +59,6 @@ export class LiveAudioSession {
   private onAudioLevel?: (level: number) => void;
   private onProfileUpdated?: (profile: { name: string; grade: string; role?: string; islamicTitle?: string; lastTopic?: string; badges?: string[] }) => void;
   private onNameChangePending?: (data: any) => void;
-  private onNameChangePending?: (data: any) => void;
   private onBoardUpdate?: (data: { content: string; caption?: string; clearFirst?: boolean; autoClearDelay?: number; practicePrompt?: string }) => void;
   private onExamReport?: (exam: any) => void;
   private onDrawingStudio?: (data: { open: boolean; topic?: string; instructions?: string; mode?: 'colorFill' | 'freehand' }) => void;
@@ -145,7 +144,6 @@ export class LiveAudioSession {
     onAudioLevel?: (level: number) => void;
     onProfileUpdated?: (profile: { name: string; grade: string; role?: string; islamicTitle?: string; lastTopic?: string; badges?: string[] }) => void;
     onNameChangePending?: (data: any) => void;
-    onNameChangePending?: (data: any) => void;
     onBoardUpdate?: (data: { content: string; caption?: string; clearFirst?: boolean; autoClearDelay?: number; practicePrompt?: string }) => void;
     onExamReport?: (exam: any) => void;
     onDrawingStudio?: (data: { open: boolean; topic?: string; instructions?: string; mode?: 'colorFill' | 'freehand' }) => void;
@@ -223,7 +221,6 @@ export class LiveAudioSession {
     this.onStatusChange = callbacks?.onStatusChange;
     this.onAudioLevel = callbacks?.onAudioLevel;
     this.onProfileUpdated = callbacks?.onProfileUpdated;
-    this.onNameChangePending = callbacks?.onNameChangePending;
     this.onNameChangePending = callbacks?.onNameChangePending;
     this.onBoardUpdate = callbacks?.onBoardUpdate;
     this.onExamReport = callbacks?.onExamReport;
@@ -405,8 +402,6 @@ export class LiveAudioSession {
 
         if (msg.type === 'ready') {
           this.onStatusChange?.('listening', 'Jarvis is listening via Gemini 3.8 Live. Speak now!');
-        } else if (msg.type === 'name_change_pending') {
-          this.onNameChangePending?.(msg);
         } else if (msg.type === 'name_change_pending') {
           this.onNameChangePending?.(msg);
         } else if (msg.type === 'profile_updated' && msg.profile) {
@@ -868,10 +863,6 @@ export class LiveAudioSession {
       preferredLanguage: preferredLanguage || 'Hinglish',
       adminPassword: adminPassword || '',
     });
-  }
-
-  resolveNameChange(action: 'keep' | 'delete' | 'add') {
-    this.sendWsPayload({ type: 'resolve_name_change', action });
   }
 
   resolveNameChange(action: 'keep' | 'delete' | 'add') {
