@@ -1147,7 +1147,7 @@ function getAdminSessionToken(req: express.Request): string {
   return match ? decodeURIComponent(match.slice(ADMIN_SESSION_COOKIE.length + 1)) : '';
 }
 app.use('/api/admin', (req, res, next) => {
-  if (req.path === '/verify-passcode' || req.path === '/change-passcode') return next();
+  if (req.path === '/verify-passcode' || req.path === '/change-passcode' || req.path === '/verify-password') return next();
   const token = getAdminSessionToken(req);
   const expires = adminSessions.get(token);
   if (!token || !expires || expires < Date.now()) {
