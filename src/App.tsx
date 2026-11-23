@@ -2022,7 +2022,7 @@ LOOK AT THE LIVE CAMERA FRAME IMAGE RIGHT NOW WITH YOUR VISION:
 
   return (
     <div className="h-full h-[100dvh] w-full fixed inset-0 bg-[#030611] text-slate-100 flex flex-col items-center justify-between p-3 sm:p-5 select-none overflow-hidden font-sans touch-none">
-      {welcomeVideoAdReady && showWelcomeVideoAd && (
+      {showWelcomeVideoAd && (
         <div className="fixed inset-0 z-[60] bg-black animate-in fade-in duration-300">
           <div className="absolute inset-0">
             <video
