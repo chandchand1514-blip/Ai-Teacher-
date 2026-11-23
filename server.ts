@@ -98,6 +98,11 @@ async function safeGenerateJsonContent(
 const app = express();
 const port = Number(process.env.PORT || 3000);
 
+// Persistent storage directory. On Render, set DATA_DIR to the mounted disk path (e.g. /var/data).
+// Local development defaults to the project directory.
+const DATA_DIR = path.resolve(process.env.DATA_DIR || process.cwd());
+try { fs.mkdirSync(DATA_DIR, { recursive: true }); } catch (e) { console.error('Unable to create DATA_DIR:', e); }
+
 app.use(express.json({ limit: '20mb' }));
 
 interface StudentItem {
@@ -276,7 +281,7 @@ export function getTimeOfDaySlot(clientHour?: number, clientMinutes?: number, cl
   }
 }
 
-const MEMORY_FILE = path.resolve(process.cwd(), 'student_memory.json');
+const MEMORY_FILE = path.join(DATA_DIR, 'student_memory.json');
 
 function getDeviceIdFromReq(req: express.Request): string {
   const deviceId = (req.query.deviceId || req.headers['x-device-id'] || req.body?.deviceId) as string;
@@ -810,7 +815,7 @@ export function clearUserDataOrHistory(targetNameOrId: string, dataTypeToClear: 
 // -------------------------------------------------------------
 // CAMERA SNAPSHOTS & PROCTORING RECORDS (CHAND JI ADMIN ACCESS)
 // -------------------------------------------------------------
-const SNAPSHOTS_FILE = path.resolve(process.cwd(), 'camera_snapshots.json');
+const SNAPSHOTS_FILE = path.join(DATA_DIR, 'camera_snapshots.json');
 
 export interface CameraSnapshotRecord {
   id: string;
@@ -1333,13 +1338,13 @@ app.post('/api/admin/full-reset', (req, res) => {
   }
 });
 
-const COMPLAINTS_FILE = path.resolve(process.cwd(), 'complaints.json');
+const COMPLAINTS_FILE = path.join(DATA_DIR, 'complaints.json');
 
-const USER_MESSAGES_FILE = path.resolve(process.cwd(), 'user_messages.json');
+const USER_MESSAGES_FILE = path.join(DATA_DIR, 'user_messages.json');
 
-const AI_BOT_CONFIG_FILE = path.resolve(process.cwd(), 'ai_bot_config.json');
+const AI_BOT_CONFIG_FILE = path.join(DATA_DIR, 'ai_bot_config.json');
 
-const ADMIN_PASSCODE_FILE = path.resolve(process.cwd(), 'admin_passcode.json');
+const ADMIN_PASSCODE_FILE = path.join(DATA_DIR, 'admin_passcode.json');
 
 function getAdminPasscode(): string {
   if (fs.existsSync(ADMIN_PASSCODE_FILE)) {
@@ -1380,7 +1385,7 @@ function saveAiBotConfig(cfg: { autoReply: boolean; botName: string }) {
   } catch (_) {}
 }
 
-const AI_DIRECTIVES_FILE = path.resolve(process.cwd(), 'ai_directives.json');
+const AI_DIRECTIVES_FILE = path.join(DATA_DIR, 'ai_directives.json');
 
 export interface AiDirectiveItem {
   id: string;
@@ -1489,7 +1494,7 @@ app.post('/api/admin/ai-directives/delete', (req, res) => {
   }
 });
 
-const UI_CONFIG_FILE = path.resolve(process.cwd(), 'ui_config.json');
+const UI_CONFIG_FILE = path.join(DATA_DIR, 'ui_config.json');
 
 export interface UiConfig {
   downloadButtonText: string;
@@ -2280,7 +2285,7 @@ app.post('/api/user-messages/mark-read', (req, res) => {
 // ----------------------------------------------------
 // APP DOWNLOAD & INSTALL NOTIFICATIONS FOR CHAND ADMIN
 // ----------------------------------------------------
-const NOTIFICATIONS_FILE = path.resolve(process.cwd(), 'notifications.json');
+const NOTIFICATIONS_FILE = path.join(DATA_DIR, 'notifications.json');
 
 app.post('/api/notifications', (req, res) => {
   try {
@@ -2406,7 +2411,7 @@ app.delete('/api/admin/notifications/:id', (req, res) => {
 // ----------------------------------------------------
 // DYNAMIC APP CONFIGURATION (DOWNLOAD LINK & BUTTON VISIBILITY) FOR CHAND ADMIN
 // ----------------------------------------------------
-const APP_CONFIG_FILE = path.resolve(process.cwd(), 'app_config.json');
+const APP_CONFIG_FILE = path.join(DATA_DIR, 'app_config.json');
 
 interface AppConfig {
   apkDownloadUrl: string;
@@ -8729,7 +8734,7 @@ async function startServer() {
     (process.argv[1] || '').endsWith(path.join('dist', 'server.js'));
 
   // Ensure /public assets remain accessible in both dev and production builds
-  app.use('/public', express.static(path.resolve(process.cwd(), 'public')));
+  app.use('/public', express.static(path.join(DATA_DIR, 'public')));
 
   if (!isProd) {
     const { createServer: createViteServer } = await import('vite');
@@ -8742,7 +8747,7 @@ async function startServer() {
     });
     app.use(vite.middlewares);
   } else {
-    const distPath = path.resolve(process.cwd(), 'dist');
+    const distPath = path.join(DATA_DIR, 'dist');
     app.use(express.static(distPath));
     app.get('*', (req, res) => {
       res.sendFile(path.resolve(distPath, 'index.html'));
