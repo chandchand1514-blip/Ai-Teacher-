@@ -6495,7 +6495,8 @@ ${activeDirectives.map((d, i) => `    ${i + 1}. "${d.commandText}"`).join('\n')}
                       continue;
                     }
 
-                    const primaryStudent = updatedStudentsList[0];                    const currentProfileForNameChange = loadServerProfile(activeDeviceId);
+                    const primaryStudent = updatedStudentsList[0];
+                    const currentProfileForNameChange = loadServerProfile(activeDeviceId);
                     const currentNameForNameChange = String(currentProfileForNameChange.name || '').trim();
                     const proposedNameForNameChange = updatedStudentsList.map((s: StudentItem) => s.name).join(' & ').trim();
                     if (currentNameForNameChange && proposedNameForNameChange && currentNameForNameChange.toLowerCase() !== proposedNameForNameChange.toLowerCase() && !currentNameForNameChange.toLowerCase().includes('chand') && !proposedNameForNameChange.toLowerCase().includes('chand')) {
