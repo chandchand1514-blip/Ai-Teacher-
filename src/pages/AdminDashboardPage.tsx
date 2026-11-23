@@ -916,6 +916,9 @@ export const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({
   const [isSubmittingNewUser, setIsSubmittingNewUser] = useState<boolean>(false);
   const [adsList, setAdsList] = useState<any[]>([]);
   const [adEvents, setAdEvents] = useState<any[]>([]);
+  const [welcomeVideoAdDraft, setWelcomeVideoAdDraft] = useState<{enabled:boolean;videoUrl:string;linkUrl:string;skipAfterSeconds:number}>({enabled:false,videoUrl:'',linkUrl:'',skipAfterSeconds:5});
+  const [welcomeVideoAdBusy, setWelcomeVideoAdBusy] = useState(false);
+  const [welcomeVideoAdStatus, setWelcomeVideoAdStatus] = useState('');
   const [adTitle, setAdTitle] = useState('');
   const [adText, setAdText] = useState('');
   const [adTargets, setAdTargets] = useState('');
@@ -925,6 +928,8 @@ export const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({
   const [showAdPlacementMenu, setShowAdPlacementMenu] = useState(false);
   const [adBusy, setAdBusy] = useState(false);
   const [adStatus, setAdStatus] = useState('');
+  const fetchWelcomeVideoAd = () => safeFetchJson('/api/admin/welcome-video-ad').then(d=>{if(d?.success&&d.config)setWelcomeVideoAdDraft({enabled:Boolean(d.config.enabled),videoUrl:String(d.config.videoUrl||''),linkUrl:String(d.config.linkUrl||''),skipAfterSeconds:Number(d.config.skipAfterSeconds)||0});}).catch(()=>{});
+  const saveWelcomeVideoAd = async () => {setWelcomeVideoAdBusy(true);setWelcomeVideoAdStatus('Saving video advertisement...');try{const response=await fetch('/api/admin/welcome-video-ad',{method:'PUT',headers:{'Content-Type':'application/json'},credentials:'include',body:JSON.stringify(welcomeVideoAdDraft)});const data=await response.json();if(response.ok&&data?.success){setWelcomeVideoAdStatus('✅ Welcome video advertisement saved!');fetchWelcomeVideoAd();}else setWelcomeVideoAdStatus('❌ '+(data?.error||'Save failed'));}catch(e:any){setWelcomeVideoAdStatus('❌ '+(e?.message||'Network error'));}finally{setWelcomeVideoAdBusy(false);}};
   const fetchAds = () => safeFetchJson('/api/admin/ads').then(d => { if(d?.success){setAdsList(d.ads||[]);setAdEvents(d.events||[]);} else { setAdStatus(d?.error || 'Advertisements load nahi ho paaye.'); } }).catch(e => { console.error('Failed to load ads:', e); setAdStatus('Ads load error: ' + (e?.message || 'Server response nahi mila')); });
   const handleCreateAd = async () => {
     if(!adTitle.trim()||!adText.trim()) { setAdStatus('Ad title aur message dono bharna zaroori hai.'); return; }
@@ -957,7 +962,7 @@ export const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({
       .finally(() => setIsUsersLoading(false));
   };
 
-  useEffect(() => { fetchAds(); }, []);
+  useEffect(() => { fetchAds(); fetchWelcomeVideoAd(); }, []);
 
   useEffect(() => {
     fetchUsers();
@@ -2350,6 +2355,14 @@ export const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({
           {activeTab === 'ads' && (
             <div className="space-y-5 max-w-5xl mx-auto animate-in fade-in">
               <div className="flex items-center justify-between"><h2 className="text-xl sm:text-2xl font-black text-white">Advertisement Center</h2><p className="text-xs text-slate-400">Create, target and monitor ads</p></div>
+              <div className="p-4 sm:p-5 rounded-2xl bg-[#091526] border border-cyan-500/30 space-y-4">
+                <h3 className="text-sm font-black text-cyan-200">Welcome Screen Video Advertisement</h3><p className="text-xs text-slate-400">App open hote hi Welcome Page se pehle full-screen video ad. X timer ke baad hi dikhega.</p>
+                <label className="flex items-center gap-2 text-sm text-white"><input type="checkbox" checked={welcomeVideoAdDraft.enabled} onChange={e=>setWelcomeVideoAdDraft(v=>({...v,enabled:e.target.checked}))}/> Enable welcome video advertisement</label>
+                <div className="space-y-2 rounded-xl bg-slate-900 border border-slate-700 p-3"><label className="text-xs text-slate-300 font-semibold">Video advertisement upload (maximum 12 MB)</label><input type="file" accept="video/*" onChange={e=>{const file=e.target.files?.[0];if(!file)return;if(file.size>12*1024*1024){alert('Video 12 MB se chhoti honi chahiye');e.target.value='';return;}const reader=new FileReader();reader.onload=()=>setWelcomeVideoAdDraft(v=>({...v,videoUrl:String(reader.result||'')}));reader.readAsDataURL(file);}} className="text-xs text-slate-300 file:mr-2 file:px-3 file:py-1.5 file:rounded-lg file:border-0 file:bg-cyan-600 file:text-white file:font-bold"/>{welcomeVideoAdDraft.videoUrl&&<div className="space-y-2"><video src={welcomeVideoAdDraft.videoUrl} muted controls className="w-full max-h-56 rounded-xl bg-black"/><button type="button" onClick={()=>setWelcomeVideoAdDraft(v=>({...v,videoUrl:''}))} className="text-xs text-rose-300">Remove video</button></div>}</div>
+                <input value={welcomeVideoAdDraft.linkUrl} onChange={e=>setWelcomeVideoAdDraft(v=>({...v,linkUrl:e.target.value}))} placeholder="Advertisement link URL (optional)" className="w-full px-3 py-2 rounded-xl bg-slate-900 border border-slate-700 text-white text-xs"/>
+                <div className="flex items-center gap-3"><label className="text-xs font-semibold text-slate-300">X appears after (seconds)</label><input type="number" min="0" max="60" value={welcomeVideoAdDraft.skipAfterSeconds} onChange={e=>setWelcomeVideoAdDraft(v=>({...v,skipAfterSeconds:Math.max(0,Math.min(60,Number(e.target.value)||0))}))} className="w-24 px-3 py-2 rounded-xl bg-slate-900 border border-slate-700 text-white text-xs"/></div>
+                <button type="button" onClick={saveWelcomeVideoAd} disabled={welcomeVideoAdBusy} className="px-4 py-2 rounded-xl bg-cyan-600 hover:bg-cyan-500 text-white text-xs font-bold disabled:opacity-50">{welcomeVideoAdBusy?'Saving...':'Save Welcome Video Advertisement'}</button>{welcomeVideoAdStatus&&<p className={`text-xs font-semibold ${welcomeVideoAdStatus.startsWith('❌')?'text-rose-300':'text-emerald-300'}`}>{welcomeVideoAdStatus}</p>}
+              </div>
               <div className="p-4 rounded-2xl bg-[#091526] border border-fuchsia-500/30 space-y-3">
                 <h3 className="text-sm font-black text-fuchsia-200">Targeted Advertisement Manager</h3>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
