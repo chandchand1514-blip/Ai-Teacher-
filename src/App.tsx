@@ -2140,7 +2140,7 @@ LOOK AT THE LIVE CAMERA FRAME IMAGE RIGHT NOW WITH YOUR VISION:
           )}
 
           {/* Second Advertisement: replaces the Download button in the header */}
-          {targetedAds.some((ad:any)=>ad.placement==='top'||ad.placement==='both') && Boolean(profile.name?.trim()) && Boolean(profile.grade?.trim()) && !profile.hasDownloadedApp && && (
+          {targetedAds.some((ad:any)=>ad.placement==='top'||ad.placement==='both') && Boolean(profile.name?.trim()) && Boolean(profile.grade?.trim()) && !profile.hasDownloadedApp && (
             <div className="w-full max-w-sm px-1 text-left">
               {targetedAds.filter((ad:any)=>(ad.placement==='top'||ad.placement==='both')&&!isAdDismissed(ad.id,'top')).map(ad => {
                 const adContent = (
