@@ -1943,7 +1943,7 @@ LOOK AT THE LIVE CAMERA FRAME IMAGE RIGHT NOW WITH YOUR VISION:
     const deviceId = getDeviceId();
     const studentName = (profile.name || '').trim();
     safeFetchJson('/api/targeted-ads?'+new URLSearchParams({deviceId,studentName}).toString())
-      .then(data => { if(data?.success && Array.isArray(data.ads)) setTargetedAds(data.ads); })
+      .then(data => { if(data?.success && Array.isArray(data.ads)) { setTargetedAds(data.ads); data.ads.forEach((ad:any)=>safeFetchJson('/api/targeted-ads/'+encodeURIComponent(ad.id)+'/event',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({studentName:profile.name||'Student',deviceId,event:'view'})}).catch(()=>{})); } })
       .catch(()=>{});
   }, [profile.name]);
   const trackTargetedAd = (adId:string,event:string) => {
