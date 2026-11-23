@@ -3696,7 +3696,7 @@ export const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({
       {/* Student Details Diagnostic Modal */}
       {selectedUserForModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-in fade-in select-none">
-          <div className="relative w-full max-w-lg bg-[#0a1526] border-2 border-cyan-500/40 rounded-3xl p-6 shadow-2xl space-y-5 max-h-[90vh] overflow-y-auto">
+          <div className="relative w-full max-w-sm bg-[#0a1526] border border-cyan-500/40 rounded-2xl p-4 shadow-2xl space-y-3 max-h-[78vh] overflow-y-auto">
             {/* Header */}
             <div className="flex items-center justify-between border-b border-slate-800 pb-4">
               <div className="flex items-center gap-3">
