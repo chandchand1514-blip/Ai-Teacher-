@@ -2216,12 +2216,19 @@ LOOK AT THE LIVE CAMERA FRAME IMAGE RIGHT NOW WITH YOUR VISION:
           <div className="flex flex-col items-center gap-2.5 w-full">
             {targetedAds.length > 0 && (
               <div className="w-full max-w-sm bg-transparent p-0 text-left">
-                {targetedAds.map(ad => (
-                  <div key={ad.id} className="flex items-center gap-2.5">
-                    {ad.imageUrl && <a href={ad.linkUrl || undefined} target={ad.linkUrl ? "_blank" : undefined} rel="noopener noreferrer" onClick={()=>ad.linkUrl&&trackTargetedAd(ad.id,'click')} className="shrink-0"><img src={ad.imageUrl} alt={ad.title||'Ad image'} className="block w-28 h-24 shrink-0 rounded-lg object-contain bg-transparent" loading="eager" onError={(e)=>{e.currentTarget.style.display='block'; e.currentTarget.alt='Advertisement image could not load'; console.warn('Advertisement image failed to load', ad.id);}} /></a>}
-                    <div className="min-w-0 flex-1"><h3 className="text-xs font-bold text-white truncate">{ad.title}</h3><p className="text-[10px] text-slate-200 line-clamp-2">{ad.text}</p>{ad.linkUrl && !ad.imageUrl && <a href={ad.linkUrl} target="_blank" rel="noopener noreferrer" onClick={()=>trackTargetedAd(ad.id,'click')} className="text-[10px] text-amber-300 underline">Open Link</a>}</div>
-                  </div>
-                ))}
+                {targetedAds.map(ad => {
+                  const adContent = (
+                    <div className="flex items-center gap-2.5 w-full">
+                      {ad.imageUrl && <img src={ad.imageUrl} alt={ad.title||'Ad image'} className="block w-28 h-24 shrink-0 rounded-lg object-contain bg-transparent" loading="eager" onError={(e)=>{e.currentTarget.style.display='block'; e.currentTarget.alt='Advertisement image could not load'; console.warn('Advertisement image failed to load', ad.id);}} />}
+                      <div className="min-w-0 flex-1"><h3 className="text-xs font-bold text-white truncate">{ad.title}</h3><p className="text-[10px] text-slate-200 line-clamp-2">{ad.text}</p></div>
+                    </div>
+                  );
+                  return ad.linkUrl ? (
+                    <a key={ad.id} href={ad.linkUrl} target="_blank" rel="noopener noreferrer" onClick={()=>trackTargetedAd(ad.id,'click')} className="block w-full cursor-pointer">
+                      {adContent}
+                    </a>
+                  ) : <div key={ad.id}>{adContent}</div>;
+                })}
               </div>
             )}
             {(status === 'error' || isMicDenied) && (
