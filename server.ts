@@ -1024,6 +1024,7 @@ app.post('/api/device/register', (req, res) => {
 
 app.post('/api/profile', (req, res) => {
   const { name, grade, role, islamicTitle, preferredLanguage, hasDownloadedApp, deviceId, deviceType, deleteName, action, ...rest } = req.body;
+  const replacePreviousName = String(req.body.replacePreviousName || '').trim();
 
   const cleanDevId = (deviceId && typeof deviceId === 'string' && deviceId.trim()) ? deviceId.trim() : 'default_device';
   const key = cleanDevId;
@@ -1092,6 +1093,9 @@ app.post('/api/profile', (req, res) => {
     deleteUserOrDevice(existing.name, { permanent: false });
   }
 
+  if (replacePreviousName && replacePreviousName.toLowerCase() !== updatedName.toLowerCase() && !replacePreviousName.toLowerCase().includes('chand')) {
+    deleteUserOrDevice(replacePreviousName, { permanent: false });
+  }
   saveServerProfile(updated, key);
   res.json({ success: true, profile: updated });
 });
@@ -5079,6 +5083,8 @@ const server = http.createServer(app);
 // WebSocket Server for Gemini Live API Voice Conversations (gemini-3.8-live)
 const wss = new WebSocketServer({ server, path: '/live' });
 
+const pendingNameChanges = new Map<string, { oldProfile: ServerProfile; proposedProfile: ServerProfile; oldName: string; newName: string; proposedStudents: StudentItem[] }>();
+
 wss.on('error', (err: any) => {
   console.warn('[Live WebSocketServer Warning]:', err?.message || err);
 });
@@ -6094,14 +6100,13 @@ CRITICAL STRICT ONBOARDING MANDATE: ZERO TEACHING / ZERO LESSONS BEFORE NAME & C
        - Naam Chand bilkul bhi add ya change nahi hona chahiye!
        - Kahein: "Galat password! Bina sahi security password ke naam Chand set nahi kiya ja sakta. Kripya apna sahi student naam batayein!"
 
-• INSTANT NAME & CLASS UPDATE PROTOCOL (TURANT FAST NAAM/CLASS BADALNA):
-  - Whenever a student or user says "Mera naam [New Name] hai", "Mera naam badal do", "Change my name to [New Name]", "Mera naam Arbaaz nahi [Zaid] hai", "Mera class [Class 3] kar do", "Class change karo":
-    1. IMMEDIATELY call 'save_student_profile' with:
-       - name: "[New Name]"
-       - grade: "[Class]"
-       - students: [{ name: "[New Name]", grade: "[Class]" }]
-    2. Speak joyfully in Hindi: "Ji bilkul! Aapka naam badal kar [New Name] kar diya gaya hai! Screen ke top pill par aapka naya naam turant badal gaya hai!"
-    3. Screen ke sabse upar header pill par likha hua naam aur class FATAK SE TURANT FAST BADAL JAYEGA!
+• NAME CHANGE CONFIRMATION PROTOCOL:
+  - If a registered student's name changes, call save_student_profile with the proposed name and class, but do not claim it is saved yet. The app will show a confirmation popup with Keep, Delete, and Add.
+  - Keep: retain the old name and profile unchanged.
+  - Delete: replace the old profile/name with the proposed name and remove the old duplicate-name record.
+  - Add: preserve the old student and append the proposed student without duplicates.
+  - Wait for the popup choice before confirming the change verbally. If no choice is made, leave the old profile unchanged.
+  - Chand/Admin identity changes are excluded from this flow and must continue requiring the verified 6-digit admin password.
 
 • INSTANT NAME & PROFILE DELETION PROTOCOL (TURANT FAST NAAM DELETE KARNA):
   - Whenever a student or user says "Arbaaz ko delete kar do", "Mera naam delete kar do", "Arbaaz hata do", "Naam mita do", "Delete Arbaaz", "Profile delete kar do", "Naam hatna chahiye":
@@ -6491,6 +6496,18 @@ ${activeDirectives.map((d, i) => `    ${i + 1}. "${d.commandText}"`).join('\n')}
                     }
 
                     const primaryStudent = updatedStudentsList[0];
+                    const currentProfileForNameChange = loadServerProfile(activeDeviceId);
+                    const currentNameForNameChange = String(currentProfileForNameChange.name || '').trim();
+                    const proposedNameForNameChange = updatedStudentsList.map((s: StudentItem) => s.name).join(' & ').trim();
+                    if (currentNameForNameChange && proposedNameForNameChange && currentNameForNameChange.toLowerCase() !== proposedNameForNameChange.toLowerCase() && !currentNameForNameChange.toLowerCase().includes('chand') && !proposedNameForNameChange.toLowerCase().includes('chand')) {
+                      const proposedProfile: ServerProfile = { ...currentProfileForNameChange, name: proposedNameForNameChange, grade: updatedStudentsList[0].grade, role: detectedRole || updatedStudentsList[0].role || currentProfileForNameChange.role || 'Basic User', islamicTitle: detectedTitle || currentProfileForNameChange.islamicTitle, students: updatedStudentsList, lastTopic: (args?.topic && typeof args.topic === 'string') ? args.topic.trim() : lastTopic, updatedAt: new Date().toISOString() };
+                      pendingNameChanges.set(activeDeviceId, { oldProfile: currentProfileForNameChange, proposedProfile, oldName: currentNameForNameChange, newName: proposedNameForNameChange, proposedStudents: updatedStudentsList });
+                      clientWs.send(JSON.stringify({ type: 'name_change_pending', oldName: currentNameForNameChange, newName: proposedNameForNameChange, message: 'Keep purana naam, Delete purana profile replace, ya Add dono students.' }));
+                      toolResults.set(callKey, { success: true, pendingConfirmation: true, message: 'Confirmation popup is open. Do not save the new name until the user chooses Keep, Delete, or Add.' });
+                      continue;
+                    }
+
+
                     const cleanTopic = (args.topic && typeof args.topic === 'string') ? args.topic.trim() : lastTopic;
                     
                     const finalRole = isRoleRemoval ? 'Basic User' : (detectedRole || primaryStudent.role || (serverProfile.role !== 'Basic User' ? serverProfile.role : 'Basic User'));
@@ -8396,6 +8413,32 @@ ${activeDirectives.map((d, i) => `    ${i + 1}. "${d.commandText}"`).join('\n')}
 
       if (parsed.type === 'init') {
         initLiveSession(parsed.profile);
+      } else if (parsed.type === 'resolve_name_change') {
+        const pending = pendingNameChanges.get(activeDeviceId);
+        const action = String(parsed.action || '').toLowerCase();
+        if (pending && ['keep', 'delete', 'add'].includes(action)) {
+          pendingNameChanges.delete(activeDeviceId);
+          if (action === 'keep') {
+            clientWs.send(JSON.stringify({ type: 'profile_updated', profile: pending.oldProfile }));
+            if (liveSession) liveSession.sendRealtimeInput({ text: '[NAME CHANGE CANCELLED]: User chose Keep. Retain the old name/profile.' });
+          } else {
+            const finalProfile: ServerProfile = { ...pending.proposedProfile };
+            if (action === 'add') {
+              const oldStudents = Array.isArray(pending.oldProfile.students) && pending.oldProfile.students.length ? pending.oldProfile.students : [{ name: pending.oldProfile.name || pending.oldName, grade: pending.oldProfile.grade || 'Class 2', role: pending.oldProfile.role }];
+              const additions = pending.proposedStudents.filter((s: StudentItem) => !oldStudents.some((o: StudentItem) => o.name.toLowerCase() === s.name.toLowerCase()));
+              finalProfile.students = [...oldStudents, ...additions];
+              finalProfile.name = finalProfile.students.map((s: StudentItem) => s.name).join(' & ');
+            } else {
+              finalProfile.students = pending.proposedStudents;
+              finalProfile.name = pending.newName;
+              deleteUserOrDevice(pending.oldName, { permanent: false });
+            }
+            saveServerProfile(finalProfile, activeDeviceId);
+            upsertActiveLiveSession(clientWs, { deviceId: activeDeviceId, studentName: finalProfile.name || '', isChandAdmin: false, lastActivity: Date.now() });
+            clientWs.send(JSON.stringify({ type: 'profile_updated', profile: finalProfile }));
+            if (liveSession) liveSession.sendRealtimeInput({ text: '[NAME CHANGE CONFIRMED]: User chose ' + action.toUpperCase() + '. Profile saved. Address the student as ' + finalProfile.name + '.' });
+          }
+        }
       } else if (parsed.type === 'update_role') {
         const newRole = String(parsed.role || 'Basic User').trim();
         const newGrade = parsed.grade ? String(parsed.grade).trim() : undefined;
@@ -8408,7 +8451,15 @@ ${activeDirectives.map((d, i) => `    ${i + 1}. "${d.commandText}"`).join('\n')}
           prof.islamicTitle = undefined;
         }
         if (newGrade) prof.grade = newGrade;
-        if (newName) prof.name = newName;
+        if (newName && prof.name && newName.toLowerCase() !== prof.name.toLowerCase() && !newName.toLowerCase().includes('chand') && !prof.name.toLowerCase().includes('chand')) {
+          const oldStudents = Array.isArray(prof.students) && prof.students.length ? prof.students : [{ name: prof.name, grade: prof.grade || 'Class 2', role: prof.role }];
+          const proposedStudents = [{ name: newName, grade: newGrade || prof.grade || 'Class 2', role: newRole }];
+          const proposedProfile: ServerProfile = { ...prof, name: newName, grade: newGrade || prof.grade, role: newRole, students: proposedStudents, updatedAt: new Date().toISOString() };
+          pendingNameChanges.set(activeDeviceId, { oldProfile: prof, proposedProfile, oldName: prof.name, newName, proposedStudents });
+          clientWs.send(JSON.stringify({ type: 'name_change_pending', oldName: prof.name, newName, message: 'Keep purana naam, Delete purana profile replace, ya Add dono students.' }));
+          return;
+        }
+        if (newName && (!prof.name || newName.toLowerCase() === prof.name.toLowerCase())) prof.name = newName;
         prof.updatedAt = new Date().toISOString();
         saveServerProfile(prof, activeDeviceId);
         console.log(`[Role Updated via UI] Device ${activeDeviceId}: role set to ${newRole}`);
@@ -8478,7 +8529,7 @@ ${activeDirectives.map((d, i) => `    ${i + 1}. "${d.commandText}"`).join('\n')}
         } else {
           prof.islamicTitle = undefined;
         }
-        prof.students = newName ? [{ name: newName, grade: newGrade, role: newRole as any, islamicTitle: prof.islamicTitle }] : [];
+        prof.students = newName ? (Array.isArray(prof.students) && prof.students.length ? prof.students : [{ name: newName, grade: newGrade, role: newRole as any, islamicTitle: prof.islamicTitle }]) : [];
         prof.updatedAt = new Date().toISOString();
 
         if (isChandAttempt) {
