@@ -219,16 +219,14 @@ export default function App() {
   useEffect(() => {
     if (!showWelcomeVideoAd) return;
     const timer = window.setTimeout(() => {
-      const video = welcomeVideoAdRef.current;
-      const playing = Boolean(video && !video.paused && !video.ended && video.readyState >= 2);
-      if (!playing) {
-        setShowWelcomeVideoAd(false);
-        setWelcomeVideoAdLoaded(false);
-        setWelcomeVideoAdCountdown(0);
-        setShowWelcomeModal(true);
-        setWelcomeCountdown(5);
-      }
-    }, 2500);
+      // Always recover to Welcome screen after a short grace period.
+      // This prevents a failed, blocked, or stalled video from trapping users on black.
+      setShowWelcomeVideoAd(false);
+      setWelcomeVideoAdLoaded(false);
+      setWelcomeVideoAdCountdown(0);
+      setShowWelcomeModal(true);
+      setWelcomeCountdown(5);
+    }, 3000);
     return () => window.clearTimeout(timer);
   }, [showWelcomeVideoAd]);
   const [showWelcomeModal, setShowWelcomeModal] = useState<boolean>(true);
@@ -2056,10 +2054,9 @@ LOOK AT THE LIVE CAMERA FRAME IMAGE RIGHT NOW WITH YOUR VISION:
             <span className="rounded bg-black/45 px-2 py-1 text-[10px] font-bold uppercase tracking-wider text-white/65 backdrop-blur-sm">Advertisement</span>
           </div>
           <div className="absolute top-3 right-3 z-10">
-            {welcomeVideoAdCountdown>0
-              ? <span className="rounded-full bg-black/55 px-3 py-1.5 text-xs font-semibold text-white/80 backdrop-blur-sm">{welcomeVideoAdCountdown}s</span>
-              : <button type="button" aria-label="Skip advertisement" onClick={()=>{setShowWelcomeVideoAd(false);setWelcomeVideoAdLoaded(false);setShowWelcomeModal(true);setWelcomeCountdown(5);}} className="flex items-center gap-1.5 rounded-full bg-black/55 px-3 py-1.5 text-sm font-semibold text-white backdrop-blur-sm hover:bg-black/70"><X className="w-4 h-4"/> Skip</button>}
+            <button type="button" aria-label="Skip advertisement" onClick={()=>{setShowWelcomeVideoAd(false);setWelcomeVideoAdLoaded(false);setShowWelcomeModal(true);setWelcomeCountdown(5);}} className="flex items-center gap-1.5 rounded-full bg-black/65 px-3 py-1.5 text-sm font-semibold text-white backdrop-blur-sm hover:bg-black/80"><X className="w-4 h-4"/> Skip</button>
           </div>
+          {!welcomeVideoAdLoaded && <div className="absolute bottom-16 right-3 z-20"><button type="button" onClick={()=>{setShowWelcomeVideoAd(false);setWelcomeVideoAdLoaded(false);setShowWelcomeModal(true);setWelcomeCountdown(5);}} className="rounded-xl bg-cyan-600 px-4 py-2 font-bold text-white shadow-lg">Continue to AI Teacher</button></div>
           <button type="button" aria-label={welcomeVideoAdMuted?'Sound on':'Sound off'} title={welcomeVideoAdMuted?'Sound on':'Sound off'} onClick={()=>{const nextMuted=!welcomeVideoAdMuted;setWelcomeVideoAdMuted(nextMuted);if(welcomeVideoAdRef.current){welcomeVideoAdRef.current.muted=nextMuted;if(!nextMuted)welcomeVideoAdRef.current.play().catch(()=>{});}}} className="absolute bottom-3 left-3 z-10 flex h-10 w-10 items-center justify-center rounded-full bg-black/55 text-white backdrop-blur-sm hover:bg-black/70">
             {welcomeVideoAdMuted?<VolumeX className="w-5 h-5"/>:<Volume2 className="w-5 h-5 text-cyan-300"/>}
           </button>
