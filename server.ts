@@ -2746,23 +2746,41 @@ async function uploadWelcomeAdToCloud(bytes: Buffer, mime: string, ext: string):
   if (!response.ok) throw new Error('Cloud upload failed (' + response.status + '): ' + (await response.text()).slice(0,300));
   return `${SUPABASE_URL}/storage/v1/object/public/${WELCOME_AD_BUCKET}/${objectPath}`;
 }
-app.post('/api/admin/welcome-video-upload', express.raw({type:()=>true,limit:'20mb'}), async (req,res)=>{try{const bytes=req.body;if(!Buffer.isBuffer(bytes)||bytes.length===0)return res.status(400).json({success:false,error:'Video file empty hai.'});if(bytes.length>20*1024*1024)return res.status(413).json({success:false,error:'Video maximum 20 MB honi chahiye.'});const mime=String(req.headers['content-type']||'');if(!mime.startsWith('video/'))return res.status(400).json({success:false,error:'Sirf video file upload karein.'});const ext=mime.split('/')[1]?.replace(/[^a-z0-9]/gi,'')||'mp4';let videoUrl:string;if(cloudStorageEnabled){videoUrl=await uploadWelcomeAdToCloud(bytes,mime,ext);}else if(!process.env.RENDER){const fileName='welcome_ad_video.'+ext;fs.writeFileSync(path.join(DATA_DIR,fileName),bytes);videoUrl='/api/welcome-ad-video';}else{return res.status(503).json({success:false,error:'Render Free ka storage temporary hai. Pehle Supabase Cloud Storage configure karein; video abhi upload nahi hui.'});}const config={enabled:true,title:'',videoUrl,linkUrl:'',skipAfterSeconds:5,updatedAt:new Date().toISOString()};saveWelcomeVideoAd(config);res.json({success:true,videoUrl,size:bytes.length,storage:cloudStorageEnabled?'cloud':'local'});}catch(err:any){res.status(500).json({success:false,error:err.message||'Upload failed'});}});
+app.post('/api/admin/welcome-video-upload', express.raw({type:()=>true,limit:'20mb'}), async (req,res)=>{try{const bytes=req.body;if(!Buffer.isBuffer(bytes)||bytes.length===0)return res.status(400).json({success:false,error:'Video file empty hai.'});if(bytes.length>20*1024*1024)return res.status(413).json({success:false,error:'Video maximum 20 MB honi chahiye.'});const mime=String(req.headers['content-type']||'');if(!mime.startsWith('video/'))return res.status(400).json({success:false,error:'Sirf video file upload karein.'});const ext=mime.split('/')[1]?.replace(/[^a-z0-9]/gi,'')||'mp4';let videoUrl:string;if(cloudStorageEnabled){videoUrl=await uploadWelcomeAdToCloud(bytes,mime,ext);}else if(!process.env.RENDER){const fileName='welcome_ad_video.'+ext;fs.writeFileSync(path.join(DATA_DIR,fileName),bytes);videoUrl='/api/welcome-ad-video';}else{return res.status(503).json({success:false,error:'Render Free ka storage temporary hai. Pehle Supabase Cloud Storage configure karein; video abhi upload nahi hui.'});}const config={enabled:true,title:'',videoUrl,linkUrl:'',skipAfterSeconds:5,updatedAt:new Date().toISOString()};saveWelcomeVideoAd(config);if(cloudStorageEnabled)await saveWelcomeVideoAdCloud(config);res.json({success:true,videoUrl,size:bytes.length,storage:cloudStorageEnabled?'cloud':'local'});}catch(err:any){res.status(500).json({success:false,error:err.message||'Upload failed'});}});
 app.get('/api/welcome-ad-video',(req,res)=>{try{const config=readWelcomeVideoAd();if(/^https:\/\//.test(String(config.videoUrl||'')))return res.redirect(302,config.videoUrl);const files=fs.readdirSync(DATA_DIR).filter(n=>/^welcome_ad_video\./.test(n));if(!files.length)return res.status(404).json({success:false,error:'Welcome ad video file not found. Admin panel se video dobara upload karein.'});const file=path.join(DATA_DIR,files[files.length-1]);const stat=fs.statSync(file);const size=stat.size;const ext=path.extname(file).toLowerCase();const mime=ext==='.mp4'?'video/mp4':ext==='.webm'?'video/webm':ext==='.mov'?'video/quicktime':ext==='.m4v'?'video/mp4':'application/octet-stream';res.setHeader('Content-Type',mime);res.setHeader('Accept-Ranges','bytes');res.setHeader('Cache-Control','no-store');const range=req.headers.range;if(range){const match=range.match(/bytes=(\\d*)-(\\d*)/);if(!match)return res.status(416).end();const start=match[1]?Number(match[1]):0;const end=match[2]?Math.min(Number(match[2]),size-1):size-1;if(start>=size||end<start)return res.status(416).end();res.status(206);res.setHeader('Content-Range',`bytes ${start}-${end}/${size}`);res.setHeader('Content-Length',end-start+1);fs.createReadStream(file,{start,end}).pipe(res);return;}res.setHeader('Content-Length',size);fs.createReadStream(file).pipe(res);}catch(err:any){console.error('[Welcome Ad Video Serve Error]',err);res.status(500).end();}});
 
 // Persisted welcome video ad settings
 const WELCOME_VIDEO_AD_FILE = path.join(DATA_DIR, 'welcome_video_ad.json');
 function readWelcomeVideoAd(): any { try { const x=JSON.parse(fs.readFileSync(WELCOME_VIDEO_AD_FILE,'utf-8')); if(x&&typeof x==='object'){if(String(x.videoUrl||'').startsWith('data:video/'))x.videoUrl='/api/welcome-ad-video';return x;} return {enabled:false,videoUrl:'',linkUrl:'',skipAfterSeconds:5}; } catch (_) { return {enabled:false,title:'',videoUrl:'',linkUrl:'',skipAfterSeconds:5}; } }
 function saveWelcomeVideoAd(config:any) { fs.writeFileSync(WELCOME_VIDEO_AD_FILE,JSON.stringify(config,null,2),'utf-8'); }
-app.get('/api/welcome-video-ad',(req,res)=>res.json({success:true,config:readWelcomeVideoAd()}));
-app.get('/api/admin/welcome-video-ad',(req,res)=>res.json({success:true,config:readWelcomeVideoAd()}));
-app.put('/api/admin/welcome-video-ad',(req,res)=>{
+async function saveWelcomeVideoAdCloud(config:any) {
+  if (!cloudStorageEnabled) return;
+  const response = await fetch(`${SUPABASE_URL}/storage/v1/object/${WELCOME_AD_BUCKET}/welcome-video-ad-config.json`, {
+    method: 'POST',
+    headers: { apikey: SUPABASE_SERVICE_ROLE_KEY, Authorization: 'Bearer ' + SUPABASE_SERVICE_ROLE_KEY, 'Content-Type': 'application/json', 'x-upsert': 'true' },
+    body: JSON.stringify(config)
+  });
+  if (!response.ok) throw new Error('Cloud settings save failed (' + response.status + ')');
+}
+async function loadWelcomeVideoAdCloud(): Promise<any|null> {
+  if (!cloudStorageEnabled) return null;
+  try {
+    const response = await fetch(`${SUPABASE_URL}/storage/v1/object/public/${WELCOME_AD_BUCKET}/welcome-video-ad-config.json`, { cache: 'no-store' });
+    if (!response.ok) return null;
+    const config = await response.json();
+    return config && typeof config === 'object' ? config : null;
+  } catch (_) { return null; }
+}
+app.get('/api/welcome-video-ad',async (req,res)=>res.json({success:true,config:(await loadWelcomeVideoAdCloud())||readWelcomeVideoAd()}));
+app.get('/api/admin/welcome-video-ad',async (req,res)=>res.json({success:true,config:(await loadWelcomeVideoAdCloud())||readWelcomeVideoAd()}));
+app.put('/api/admin/welcome-video-ad',async (req,res)=>{
   try {
     const body=req.body||{}, videoUrl=String(body.videoUrl||''), linkUrl=String(body.linkUrl||'');
     if(videoUrl&&!videoUrl.startsWith('data:video/')&&!videoUrl.startsWith('/api/welcome-ad-video')&&!videoUrl.startsWith('http://')&&!videoUrl.startsWith('https://'))return res.status(400).json({success:false,error:'Video format invalid'});
     
     const normalizedVideoUrl=videoUrl.startsWith('data:video/')?'/api/welcome-ad-video':videoUrl;
     const config={enabled:Boolean(body.enabled),title:String(body.title||'').trim().slice(0,120),videoUrl:normalizedVideoUrl,linkUrl:linkUrl.slice(0,2000),skipAfterSeconds:Math.max(0,Math.min(60,Number(body.skipAfterSeconds)||0)),updatedAt:new Date().toISOString()};
-    saveWelcomeVideoAd(config);res.json({success:true,config});
+    saveWelcomeVideoAd(config);if(cloudStorageEnabled)await saveWelcomeVideoAdCloud(config);res.json({success:true,config});
   }catch(err:any){res.status(500).json({success:false,error:err.message});}
 });
 
