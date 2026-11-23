@@ -3702,11 +3702,11 @@ export const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({
       {/* Student Details Diagnostic Modal */}
       {selectedUserForModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-in fade-in select-none">
-          <div className="relative w-full max-w-sm bg-[#0a1526] border border-cyan-500/40 rounded-2xl p-4 shadow-2xl space-y-3 max-h-[78vh] overflow-y-auto">
+          <div className="relative w-full max-w-xs bg-[#0a1526] border border-cyan-500/40 rounded-xl p-3 shadow-2xl space-y-1">
             {/* Header */}
-            <div className="flex items-center justify-between border-b border-slate-800 pb-4">
-              <div className="flex items-center gap-3">
-                <div className={`w-12 h-12 rounded-2xl flex items-center justify-center font-black text-xl shadow-lg shrink-0 ${
+            <div className="flex items-center justify-between border-b border-slate-800 pb-2">
+              <div className="flex items-center gap-2">
+                <div className={`w-8 h-8 rounded-lg flex items-center justify-center font-black text-sm shadow-lg shrink-0 ${
                   selectedUserForModal.name.toLowerCase().includes('chand')
                     ? 'bg-gradient-to-tr from-amber-400 to-rose-500 text-slate-950 ring-2 ring-amber-400/50'
                     : 'bg-gradient-to-tr from-cyan-500 to-blue-600 text-slate-950'
@@ -3714,7 +3714,7 @@ export const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({
                   {selectedUserForModal.name.charAt(0).toUpperCase()}
                 </div>
                 <div className="flex items-center gap-2">
-                  <h3 className="text-lg font-black text-white">{selectedUserForModal.name}</h3>
+                  <h3 className="text-sm font-black text-white">{selectedUserForModal.name}</h3>
                   <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-cyan-950 border border-cyan-500/40 text-cyan-300">
                     {selectedUserForModal.grade}
                   </span>
@@ -3728,16 +3728,16 @@ export const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({
               <button
                 type="button"
                 onClick={() => setSelectedUserForModal(null)}
-                className="p-2 rounded-xl text-slate-400 hover:text-white hover:bg-slate-800 cursor-pointer"
+                className="p-1 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 cursor-pointer"
               >
-                <X className="w-5 h-5" />
+                <X className="w-4 h-4" />
               </button>
             </div>
 
-            <div className="grid grid-cols-3 gap-2 text-center text-xs">
-              <div className="p-3 rounded-2xl bg-slate-900 border border-slate-800">
+            <div className="grid grid-cols-3 gap-1 text-center text-[10px]">
+              <div className="p-2 rounded-lg bg-slate-900 border border-slate-800">
                 <span className="text-[10px] text-slate-400 block">Visits</span>
-                <strong className="text-white text-sm font-mono">{selectedUserForModal.visitCount}</strong>
+                <strong className="text-white text-xs font-mono">{selectedUserForModal.visitCount}</strong>
               </div>
               <div className="p-3 rounded-2xl bg-slate-900 border border-slate-800">
                 <span className="text-[10px] text-slate-400 block">Stars</span>
@@ -3756,9 +3756,9 @@ export const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({
                 <h4 className="text-xs font-mono font-bold text-amber-400 uppercase tracking-wider">
                   Mastered Topics ({selectedUserForModal.learnedTopics.length})
                 </h4>
-                <div className="flex flex-wrap gap-1.5 max-h-32 overflow-y-auto">
-                  {selectedUserForModal.learnedTopics.map((top, idx) => (
-                    <span key={idx} className="text-xs px-2.5 py-1 rounded-xl bg-cyan-950/80 border border-cyan-500/30 text-cyan-200 font-medium">
+                <div className="flex flex-wrap gap-1.5 ">
+                  {selectedUserForModal.learnedTopics.slice(0,6).map((top, idx) => (
+                    <span key={idx} className="text-[10px] px-1.5 py-0.5 rounded-lg bg-cyan-950/80 border border-cyan-500/30 text-cyan-200 font-medium">
                       {top}
                     </span>
                   ))}
@@ -3771,9 +3771,9 @@ export const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({
                 <h4 className="text-xs font-mono font-bold text-cyan-400 uppercase tracking-wider">
                   Recent Questions
                 </h4>
-                <div className="space-y-1.5 max-h-36 overflow-y-auto">
-                  {selectedUserForModal.askedQuestions.map((q, idx) => (
-                    <div key={idx} className="p-2.5 rounded-xl bg-slate-900 border border-slate-800 text-xs text-slate-200">
+                <div className="space-y-1.5 ">
+                  {selectedUserForModal.askedQuestions.slice(0,3).map((q, idx) => (
+                    <div key={idx} className="p-1.5 rounded-lg bg-slate-900 border border-slate-800 text-[10px] text-slate-200">
                       {q}
                     </div>
                   ))}
@@ -3787,7 +3787,7 @@ export const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({
                   Weekly Questions
                 </h4>
                 <div className="space-y-1.5 max-h-36 overflow-y-auto">
-                  {selectedUserForModal.weeklyQuestions.map((wq, idx) => (
+                  {selectedUserForModal.weeklyQuestions.slice(0,3).map((wq, idx) => (
                     <div key={idx} className="p-2.5 rounded-xl bg-slate-900 border border-slate-800 text-xs text-slate-200 flex items-center justify-between">
                       <span>{wq.question}</span>
                       <span className="text-[10px] text-slate-400 font-mono">{wq.date}</span>
@@ -3797,7 +3797,7 @@ export const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({
               </div>
             )}
 
-            <div className="p-3.5 rounded-2xl bg-[#09182d] border border-cyan-500/30 flex items-center justify-between gap-2">
+            <div className="p-2 rounded-xl bg-[#09182d] border border-cyan-500/30 flex items-center justify-between gap-2">
               <h4 className="text-xs font-bold text-white">Download Button</h4>
               <button
                 type="button"
@@ -3815,7 +3815,7 @@ export const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({
             <button
               type="button"
               onClick={() => handleToggleBlock(selectedUserForModal)}
-              className={selectedUserForModal.isBlocked ? 'w-full py-2.5 rounded-2xl bg-emerald-600/20 border border-emerald-500/50 text-emerald-300 font-bold text-xs cursor-pointer' : 'w-full py-2.5 rounded-2xl bg-amber-600/20 border border-amber-500/50 text-amber-300 font-bold text-xs cursor-pointer'}
+              className={selectedUserForModal.isBlocked ? 'w-full py-2 rounded-xl bg-emerald-600/20 border border-emerald-500/50 text-emerald-300 font-bold text-xs cursor-pointer' : 'w-full py-2.5 rounded-2xl bg-amber-600/20 border border-amber-500/50 text-amber-300 font-bold text-xs cursor-pointer'}
             >
               {selectedUserForModal.isBlocked ? 'Unblock User' : 'Block User'}
             </button>
@@ -3831,7 +3831,7 @@ export const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({
             <button
               type="button"
               onClick={() => setSelectedUserForModal(null)}
-              className="w-full py-3 rounded-2xl bg-slate-900 hover:bg-slate-800 border border-slate-700 text-white font-bold text-xs cursor-pointer"
+              className="w-full py-2 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-700 text-white font-bold text-xs cursor-pointer"
             >
               Close
             </button>
