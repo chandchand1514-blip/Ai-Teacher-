@@ -1464,7 +1464,7 @@ app.post('/api/admin/ai-directives', (req, res) => {
   }
 });
 
-app.post('/api/admin/ai-directives/toggle', (req, res) => {
+app.get('/api/admin/ai-context', (req, res) => {\n  try {\n    const store = loadAllProfiles();\n    const devices = store.devices || {};\n    const profiles = Object.entries(devices).map(([deviceId, raw]: [string, any]) => {\n      const p = raw || {};\n      return { deviceId, name: String(p.name || p.studentName || 'Unknown').slice(0, 80), grade: p.grade || '', isBlocked: Boolean(p.isBlocked), hasDownloadedApp: Boolean(p.hasDownloadedApp), visitCount: Number(p.visitCount || 0), lastActivityTimestamp: p.lastActivityTimestamp || p.updatedAt || null, learnedTopics: Array.isArray(p.learnedTopics) ? p.learnedTopics.slice(-50) : [], askedQuestionsHistory: Array.isArray(p.askedQuestionsHistory) ? p.askedQuestionsHistory.slice(-50) : [], badges: Array.isArray(p.badges) ? p.badges : [], students: Array.isArray(p.students) ? p.students.map((s: any) => ({ name: String(s.name || '').slice(0, 80), grade: s.grade || '' })) : [] };\n    });\n    res.json({ success: true, generatedAt: new Date().toISOString(), totals: { users: profiles.length, blocked: profiles.filter(p => p.isBlocked).length, downloaded: profiles.filter(p => p.hasDownloadedApp).length }, profiles, activeDirectives: getAiDirectives().filter(d => d.active).map(d => ({ id: d.id, commandText: d.commandText, category: d.category })) });\n  } catch (e: any) { res.status(500).json({ success: false, error: e.message }); }\n});\n\napp.post('/api/admin/ai-directives/toggle', (req, res) => {
   try {
     const { id, active } = req.body;
     let directives = getAiDirectives();
