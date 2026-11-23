@@ -2033,10 +2033,10 @@ LOOK AT THE LIVE CAMERA FRAME IMAGE RIGHT NOW WITH YOUR VISION:
               className="w-full h-full object-contain bg-black cursor-pointer"
             />
             {welcomeVideoAdConfig.title && (
-              <div className="pointer-events-none absolute bottom-5 left-4 right-4 sm:bottom-7 sm:left-8 sm:right-8 text-center">
-                <span className="inline-block max-w-full rounded-xl bg-black/55 px-4 py-2.5 text-base sm:text-xl font-bold text-white drop-shadow-lg backdrop-blur-sm">
-                  {welcomeVideoAdConfig.title}
-                </span>
+              <div className="pointer-events-none absolute bottom-0 left-0 right-0 z-10 px-4 pb-5 sm:px-8 sm:pb-7 text-center">
+                <div className="mx-auto max-w-3xl rounded-2xl border border-white/15 bg-gradient-to-r from-black/80 via-black/65 to-black/80 px-5 py-3 shadow-2xl backdrop-blur-md">
+                  <p className="text-sm sm:text-lg md:text-xl font-extrabold tracking-wide text-white drop-shadow-lg">{welcomeVideoAdConfig.title}</p>
+                </div>
               </div>
             )}
           </div>
