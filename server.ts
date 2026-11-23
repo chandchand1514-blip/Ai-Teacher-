@@ -103,7 +103,7 @@ const port = Number(process.env.PORT || 3000);
 const DATA_DIR = path.resolve(process.env.DATA_DIR || process.cwd());
 try { fs.mkdirSync(DATA_DIR, { recursive: true }); } catch (e) { console.error('Unable to create DATA_DIR:', e); }
 
-app.use(express.json({ limit: '20mb' }));
+app.use(express.json({ limit: '32mb' }));
 
 interface StudentItem {
   name: string;
@@ -2741,7 +2741,7 @@ app.put('/api/admin/welcome-video-ad',(req,res)=>{
   try {
     const body=req.body||{}, videoUrl=String(body.videoUrl||''), linkUrl=String(body.linkUrl||'');
     if(videoUrl&&!videoUrl.startsWith('data:video/'))return res.status(400).json({success:false,error:'Video format invalid'});
-    if(videoUrl.length>16*1024*1024)return res.status(400).json({success:false,error:'Video too large. Upload a video maximum 12 MB.'});
+    if(videoUrl.length>28*1024*1024)return res.status(400).json({success:false,error:'Video too large. Upload a video maximum 20 MB.'});
     const config={enabled:Boolean(body.enabled),videoUrl,linkUrl:linkUrl.slice(0,2000),skipAfterSeconds:Math.max(0,Math.min(60,Number(body.skipAfterSeconds)||0)),updatedAt:new Date().toISOString()};
     saveWelcomeVideoAd(config);res.json({success:true,config});
   }catch(err:any){res.status(500).json({success:false,error:err.message});}
