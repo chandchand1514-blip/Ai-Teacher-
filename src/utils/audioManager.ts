@@ -363,7 +363,7 @@ export class LiveAudioSession {
     const backendBase = configuredBackend || (window.location.hostname.endsWith('vercel.app')
       ? 'https://ai-teacher-rd8u.onrender.com'
       : window.location.origin);
-    const wsBase = backendBase.replace(/^http:/, 'ws:').replace(/^https:/, 'wss:').replace(/\/$/, '');
+    const wsBase = backendBase.startsWith('https:') ? 'wss:' + backendBase.slice(6).replace(/\/$/, '') : backendBase.startsWith('http:') ? 'ws:' + backendBase.slice(5).replace(/\/$/, '') : backendBase.endsWith('/') ? backendBase.slice(0, -1) : backendBase;
     const wsUrl = `${wsBase}/live`;
     this.ws = new WebSocket(wsUrl);
 
