@@ -111,7 +111,7 @@ export const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({
   onSaveExamResult
 }) => {
   // Authentication & Security State
-  const [isUnlocked, setIsUnlocked] = useState<boolean>(true);
+  const [isUnlocked, setIsUnlocked] = useState<boolean>(false);
   const [unlockPasscode, setUnlockPasscode] = useState('');
   const [unlockError, setUnlockError] = useState('');
   const [unlockBusy, setUnlockBusy] = useState(false);
@@ -928,7 +928,7 @@ export const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({
     if(!adTitle.trim()||!adText.trim()) { setAdStatus('Ad title aur message dono bharna zaroori hai.'); return; }
     setAdBusy(true); setAdStatus('Advertisement save ho raha hai...');
     try {
-      const response=await fetch('/api/admin/ads',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({title:adTitle,text:adText,imageUrl:adImageUrl,linkUrl:adLink,targetUsers:adTargets.split(',').map(s=>s.trim()).filter(Boolean),active:true})});
+      const response=await fetch('/api/admin/ads',{method:'POST',headers:{'Content-Type':'application/json'},credentials:'include',body:JSON.stringify({title:adTitle,text:adText,imageUrl:adImageUrl,linkUrl:adLink,targetUsers:adTargets.split(',').map(s=>s.trim()).filter(Boolean),active:true})});
       let d:any=null; try { d=await response.json(); } catch { d=null; }
       if(response.ok && d?.success){setAdTitle('');setAdText('');setAdTargets('');setAdLink('');setAdImageUrl('');setAdStatus('✅ Advertisement successfully create ho gaya!');fetchAds();}
       else { const detail=d?.error||d?.message||response.statusText||'Unknown server error'; setAdStatus('❌ Advertisement save nahi hua (HTTP '+response.status+'): '+detail); }
