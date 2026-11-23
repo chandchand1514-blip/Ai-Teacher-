@@ -2106,9 +2106,9 @@ LOOK AT THE LIVE CAMERA FRAME IMAGE RIGHT NOW WITH YOUR VISION:
           )}
 
           {/* Second Advertisement: replaces the Download button in the header */}
-          {targetedAds.length > 0 && Boolean(profile.name?.trim()) && Boolean(profile.grade?.trim()) && !profile.hasDownloadedApp && Date.now() >= adDismissedUntil && (
+          {targetedAds.some((ad:any)=>ad.placement==='top'||ad.placement==='both') && Boolean(profile.name?.trim()) && Boolean(profile.grade?.trim()) && !profile.hasDownloadedApp && Date.now() >= adDismissedUntil && (
             <div className="w-full max-w-sm px-1 text-left">
-              {targetedAds.map(ad => {
+              {targetedAds.filter((ad:any)=>ad.placement==='top'||ad.placement==='both').map(ad => {
                 const adContent = (
                   <div className="flex items-center gap-3 w-full p-2.5 pr-10 relative min-h-[76px]">\n                    <span className="absolute top-0 left-0 w-3 h-3 border-t-2 border-l-2 border-cyan-300/70 rounded-tl-md pointer-events-none" />\n                    <span className="absolute top-0 right-0 w-3 h-3 border-t-2 border-r-2 border-cyan-300/70 rounded-tr-md pointer-events-none" />\n                    <span className="absolute bottom-0 left-0 w-3 h-3 border-b-2 border-l-2 border-cyan-300/70 rounded-bl-md pointer-events-none" />\n                    <span className="absolute bottom-0 right-0 w-3 h-3 border-b-2 border-r-2 border-cyan-300/70 rounded-br-md pointer-events-none" />
                     {ad.imageUrl && <img src={ad.imageUrl} alt={ad.title || 'Ad image'} className="block w-14 h-14 shrink-0 rounded-xl object-cover border border-white/30 bg-slate-900" loading="eager" onError={(e)=>{e.currentTarget.alt='Advertisement image could not load'; console.warn('Advertisement image failed to load', ad.id);}} />}
@@ -2122,7 +2122,7 @@ LOOK AT THE LIVE CAMERA FRAME IMAGE RIGHT NOW WITH YOUR VISION:
                         {adContent}
                       </a>
                     ) : adContent}
-                    <button type="button" aria-label="Temporarily hide advertisement" title="Hide ad for 10 minutes" onClick={dismissAdTemporarily} className="absolute right-2 top-2 z-10 w-6 h-6 rounded-full bg-black/60 hover:bg-black/80 border border-white/30 text-white flex items-center justify-center text-xs">✕</button>
+                    <button type="button" aria-label="Temporarily hide advertisement" title="Hide ad for 10 minutes" onClick={dismissAdTemporarily} className="absolute right-3 top-3 z-10 w-5 h-5 text-white/80 hover:text-white flex items-center justify-center text-xs">✕</button>
                   </div>
                 );
               })}
@@ -2232,9 +2232,9 @@ LOOK AT THE LIVE CAMERA FRAME IMAGE RIGHT NOW WITH YOUR VISION:
       <footer className="w-full max-w-sm sm:max-w-md z-20 pb-2 sm:pb-4 flex flex-col items-center gap-3">
         {!isLiveActive ? (
           <div className="flex flex-col items-center gap-2.5 w-full">
-            {targetedAds.length > 0 && Boolean(profile.name?.trim()) && Boolean(profile.grade?.trim()) && !profile.hasDownloadedApp && Date.now() >= adDismissedUntil && (
+            {targetedAds.some((ad:any)=>ad.placement!=='top') && Boolean(profile.name?.trim()) && Boolean(profile.grade?.trim()) && !profile.hasDownloadedApp && Date.now() >= adDismissedUntil && (
               <div className="w-full max-w-sm px-1 text-left">
-                {targetedAds.map(ad => {
+                {targetedAds.filter((ad:any)=>ad.placement!=='top').map(ad => {
                   const adContent = (
                     <div className="flex items-center gap-3 w-full rounded-full bg-gradient-to-r from-slate-800 via-slate-700 to-indigo-900 border-2 border-white/30 p-2.5 pr-10 shadow-[0_6px_24px_rgba(0,0,0,0.45)] relative min-h-[76px]">
                       {ad.imageUrl && <img src={ad.imageUrl} alt={ad.title||'Ad image'} className="block w-20 h-20 shrink-0 rounded-xl object-cover border border-white/30 bg-slate-900" loading="eager" onError={(e)=>{e.currentTarget.alt='Advertisement image could not load'; console.warn('Advertisement image failed to load', ad.id);}} />}
