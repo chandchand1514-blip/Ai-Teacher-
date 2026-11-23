@@ -2028,7 +2028,7 @@ LOOK AT THE LIVE CAMERA FRAME IMAGE RIGHT NOW WITH YOUR VISION:
           <div className="absolute top-3 right-3 z-10">
             {welcomeVideoAdCountdown>0
               ? <span className="rounded-full bg-black/55 px-3 py-1.5 text-xs font-semibold text-white/80 backdrop-blur-sm">{welcomeVideoAdCountdown}s</span>
-              : <button type="button" aria-label="Skip advertisement" onClick={()=>setShowWelcomeVideoAd(false)} className="flex items-center gap-1.5 rounded-full bg-black/55 px-3 py-1.5 text-sm font-semibold text-white backdrop-blur-sm hover:bg-black/70"><X className="w-4 h-4"/> Skip</button>}
+              : <button type="button" aria-label="Skip advertisement" onClick={()=>{setShowWelcomeVideoAd(false);setWelcomeVideoAdLoaded(false);setShowWelcomeModal(true);setWelcomeCountdown(5);}} className="flex items-center gap-1.5 rounded-full bg-black/55 px-3 py-1.5 text-sm font-semibold text-white backdrop-blur-sm hover:bg-black/70"><X className="w-4 h-4"/> Skip</button>}
           </div>
           <button type="button" aria-label={welcomeVideoAdMuted?'Sound on':'Sound off'} title={welcomeVideoAdMuted?'Sound on':'Sound off'} onClick={()=>{const nextMuted=!welcomeVideoAdMuted;setWelcomeVideoAdMuted(nextMuted);if(welcomeVideoAdRef.current){welcomeVideoAdRef.current.muted=nextMuted;if(!nextMuted)welcomeVideoAdRef.current.play().catch(()=>{});}}} className="absolute bottom-3 left-3 z-10 flex h-10 w-10 items-center justify-center rounded-full bg-black/55 text-white backdrop-blur-sm hover:bg-black/70">
             {welcomeVideoAdMuted?<VolumeX className="w-5 h-5"/>:<Volume2 className="w-5 h-5 text-cyan-300"/>}
@@ -2080,7 +2080,7 @@ LOOK AT THE LIVE CAMERA FRAME IMAGE RIGHT NOW WITH YOUR VISION:
                 <Sparkles className="w-4 h-4 text-cyan-400" />
                 <span>Opening AI Classroom...</span>
               </div>
-              <button type="button" onClick={() => setShowWelcomeModal(false)} className="mt-3 w-full rounded-xl bg-gradient-to-r from-cyan-500 to-blue-600 px-5 py-3 text-sm font-bold text-white shadow-lg shadow-cyan-900/30 hover:brightness-110 active:scale-[0.98] transition">
+              <button type="button" onClick={handleWelcomeStartWithMic} className="mt-3 w-full rounded-xl bg-gradient-to-r from-cyan-500 to-blue-600 px-5 py-3 text-sm font-bold text-white shadow-lg shadow-cyan-900/30 hover:brightness-110 active:scale-[0.98] transition">
                 Enter AI Teacher
               </button>
             </div>
