@@ -1942,9 +1942,18 @@ LOOK AT THE LIVE CAMERA FRAME IMAGE RIGHT NOW WITH YOUR VISION:
   useEffect(() => {
     const deviceId = getDeviceId();
     const studentName = (profile.name || '').trim();
-    safeFetchJson('/api/targeted-ads?'+new URLSearchParams({deviceId,studentName}).toString())
-      .then(data => { if(data?.success && Array.isArray(data.ads)) { setTargetedAds(data.ads); data.ads.forEach((ad:any)=>safeFetchJson('/api/targeted-ads/'+encodeURIComponent(ad.id)+'/event',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({studentName:profile.name||'Student',deviceId,event:'view'})}).catch(()=>{})); } })
-      .catch(()=>{});
+    const fetchAds = (trackViews = false) => {
+      safeFetchJson('/api/targeted-ads?' + new URLSearchParams({ deviceId, studentName }).toString())
+        .then(data => {
+          if (data?.success && Array.isArray(data.ads)) {
+            setTargetedAds(data.ads);
+            if (trackViews) data.ads.forEach((ad: any) => safeFetchJson('/api/targeted-ads/' + encodeURIComponent(ad.id) + '/event', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ studentName: profile.name || 'Student', deviceId, event: 'view' }) }).catch(() => {}));
+          }
+        }).catch(() => {});
+    };
+    fetchAds(true);
+    const timer = window.setInterval(() => fetchAds(false), 15000);
+    return () => window.clearInterval(timer);
   }, [profile.name]);
   const trackTargetedAd = (adId:string,event:string) => {
     safeFetchJson('/api/targeted-ads/'+encodeURIComponent(adId)+'/event',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({studentName:profile.name||'Student',deviceId:getDeviceId(),event})}).catch(()=>{});
