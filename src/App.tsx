@@ -1218,7 +1218,10 @@ LOOK AT THE LIVE CAMERA FRAME IMAGE RIGHT NOW WITH YOUR VISION:
         console.log('[LiveAudioSession audio level]:', lvl);
         setAudioLevel(lvl);
       },
-      onProfileUpdated: (newProfile: any) => {      onNameChangePending: (data: any) => setNameChangeConfirmation(data),
+      onProfileUpdated: (newProfile: any) => {      onNameChangePending: (data: any) => {
+        setNameChangeConfirmation(data);
+        sessionRef.current?.sendTextMessage(data.message || `Aapka naam ${data.oldName} se ${data.newName} badalne ki request hai. Purana naam rakhne ke liye Keep, purana profile replace karne ke liye Delete, ya dono students rakhne ke liye Add dabayein.`);
+      },
 
         setProfile((prev) => {
           const newName = newProfile.name !== undefined ? (newProfile.name ? String(newProfile.name).trim() : '') : prev.name;
