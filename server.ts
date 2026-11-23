@@ -8450,7 +8450,15 @@ ${activeDirectives.map((d, i) => `    ${i + 1}. "${d.commandText}"`).join('\n')}
           prof.islamicTitle = undefined;
         }
         if (newGrade) prof.grade = newGrade;
-        if (newName) prof.name = newName;
+        if (newName && prof.name && newName.toLowerCase() !== prof.name.toLowerCase() && !newName.toLowerCase().includes('chand') && !prof.name.toLowerCase().includes('chand')) {
+          const oldStudents = Array.isArray(prof.students) && prof.students.length ? prof.students : [{ name: prof.name, grade: prof.grade || 'Class 2', role: prof.role }];
+          const proposedStudents = [{ name: newName, grade: newGrade || prof.grade || 'Class 2', role: newRole }];
+          const proposedProfile: ServerProfile = { ...prof, name: newName, grade: newGrade || prof.grade, role: newRole, students: proposedStudents, updatedAt: new Date().toISOString() };
+          pendingNameChanges.set(activeDeviceId, { oldProfile: prof, proposedProfile, oldName: prof.name, newName, proposedStudents });
+          clientWs.send(JSON.stringify({ type: 'name_change_pending', oldName: prof.name, newName, message: 'Keep purana naam, Delete purana profile replace, ya Add dono students.' }));
+          return;
+        }
+        if (newName && (!prof.name || newName.toLowerCase() === prof.name.toLowerCase())) prof.name = newName;
         prof.updatedAt = new Date().toISOString();
         saveServerProfile(prof, activeDeviceId);
         console.log(`[Role Updated via UI] Device ${activeDeviceId}: role set to ${newRole}`);
