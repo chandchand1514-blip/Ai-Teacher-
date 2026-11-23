@@ -215,18 +215,19 @@ export default function App() {
   }, []);
   useEffect(() => { if(showWelcomeVideoAd)setWelcomeVideoAdLoaded(false); }, [showWelcomeVideoAd, welcomeVideoAdConfig.videoUrl]);
   useEffect(() => { if(!showWelcomeVideoAd||welcomeVideoAdCountdown<=0)return;const timer=window.setTimeout(()=>setWelcomeVideoAdCountdown(v=>Math.max(0,v-1)),1000);return()=>window.clearTimeout(timer); },[showWelcomeVideoAd,welcomeVideoAdCountdown]);
-  // If the ad video fails to load, automatically start AI Teacher instead of leaving a black screen.
+  // Always provide a hard fallback so a video that reports "loaded" but renders black cannot trap the user.
   useEffect(() => {
-    if (!showWelcomeVideoAd || welcomeVideoAdLoaded) return;
+    if (!showWelcomeVideoAd) return;
+    const fallbackDelay = Math.max(15000, (welcomeVideoAdConfig.skipAfterSeconds + 5) * 1000);
     const timer = window.setTimeout(() => {
       setShowWelcomeVideoAd(false);
       setWelcomeVideoAdLoaded(false);
       setWelcomeVideoAdCountdown(0);
       requestMicPermission().catch(() => {});
       startSession().catch(() => {});
-    }, 12000);
+    }, fallbackDelay);
     return () => window.clearTimeout(timer);
-  }, [showWelcomeVideoAd, welcomeVideoAdLoaded]);
+  }, [showWelcomeVideoAd, welcomeVideoAdConfig.skipAfterSeconds]);
   // Start AI Teacher after the configured ad skip delay once the video has actually loaded.
   useEffect(() => {
     if (!showWelcomeVideoAd || !welcomeVideoAdLoaded || welcomeVideoAdCountdown > 0) return;
