@@ -2765,6 +2765,7 @@ app.post('/api/admin/ads', (req, res) => {
       text: text.slice(0, 1000),
       imageUrl,
       linkUrl: linkUrl.slice(0, 2000),
+      placement: ['top','bottom','both'].includes(String(body.placement)) ? String(body.placement) : 'bottom',
       targetUsers,
       active,
       createdAt: new Date().toISOString(),
