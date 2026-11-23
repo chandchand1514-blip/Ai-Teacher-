@@ -8528,7 +8528,7 @@ ${activeDirectives.map((d, i) => `    ${i + 1}. "${d.commandText}"`).join('\n')}
         } else {
           prof.islamicTitle = undefined;
         }
-        prof.students = newName ? [{ name: newName, grade: newGrade, role: newRole as any, islamicTitle: prof.islamicTitle }] : [];
+        prof.students = newName ? (Array.isArray(prof.students) && prof.students.length ? prof.students : [{ name: newName, grade: newGrade, role: newRole as any, islamicTitle: prof.islamicTitle }]) : [];
         prof.updatedAt = new Date().toISOString();
 
         if (isChandAttempt) {
