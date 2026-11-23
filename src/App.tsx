@@ -197,6 +197,20 @@ export default function App() {
     if (!report) return;
     generateReportCardPdf(report);
   };
+  const [welcomeVideoAdConfig, setWelcomeVideoAdConfig] = useState<{enabled:boolean;videoUrl:string;linkUrl:string;skipAfterSeconds:number}>({enabled:false,videoUrl:'',linkUrl:'',skipAfterSeconds:5});
+  const [welcomeVideoAdReady, setWelcomeVideoAdReady] = useState(false);
+  const [showWelcomeVideoAd, setShowWelcomeVideoAd] = useState(false);
+  const [welcomeVideoAdCountdown, setWelcomeVideoAdCountdown] = useState(5);
+  useEffect(() => {
+    safeFetchJson('/api/welcome-video-ad').then(data => {
+      const config=data?.config;
+      if(config) {
+        const normalized={enabled:Boolean(config.enabled),videoUrl:String(config.videoUrl||''),linkUrl:String(config.linkUrl||''),skipAfterSeconds:Math.max(0,Math.min(60,Number(config.skipAfterSeconds)||0))};
+        setWelcomeVideoAdConfig(normalized);setWelcomeVideoAdCountdown(normalized.skipAfterSeconds);setShowWelcomeVideoAd(normalized.enabled&&Boolean(normalized.videoUrl));
+      }
+    }).catch(()=>{}).finally(()=>setWelcomeVideoAdReady(true));
+  }, []);
+  useEffect(() => { if(!showWelcomeVideoAd||welcomeVideoAdCountdown<=0)return;const timer=window.setTimeout(()=>setWelcomeVideoAdCountdown(v=>Math.max(0,v-1)),1000);return()=>window.clearTimeout(timer); },[showWelcomeVideoAd,welcomeVideoAdCountdown]);
   const [showWelcomeModal, setShowWelcomeModal] = useState<boolean>(true);
   const [welcomeCountdown, setWelcomeCountdown] = useState<number>(5);
   const [typedTitleText, setTypedTitleText] = useState<string>('');
@@ -1995,8 +2009,18 @@ LOOK AT THE LIVE CAMERA FRAME IMAGE RIGHT NOW WITH YOUR VISION:
 
   return (
     <div className="h-full h-[100dvh] w-full fixed inset-0 bg-[#030611] text-slate-100 flex flex-col items-center justify-between p-3 sm:p-5 select-none overflow-hidden font-sans touch-none">
+      {welcomeVideoAdReady && showWelcomeVideoAd && (
+        <div className="fixed inset-0 z-[60] bg-black flex flex-col items-center justify-center p-3 sm:p-5 animate-in fade-in duration-300">
+          <div className="w-full max-w-4xl flex flex-col gap-2 relative">
+            {welcomeVideoAdCountdown<=0&&<button type="button" aria-label="Skip advertisement" onClick={()=>setShowWelcomeVideoAd(false)} className="absolute right-2 top-2 z-30 w-10 h-10 rounded-full bg-black/70 border border-white/40 text-white flex items-center justify-center shadow-lg"><X className="w-5 h-5"/></button>}
+            {welcomeVideoAdCountdown>0&&<span className="absolute right-3 top-3 z-30 rounded-full bg-black/75 border border-white/20 px-3 py-1.5 text-xs font-bold text-white">{welcomeVideoAdCountdown}s</span>}
+            <a href={welcomeVideoAdConfig.linkUrl||undefined} target="_blank" rel="noopener noreferrer" onClick={e=>{if(!welcomeVideoAdConfig.linkUrl)e.preventDefault();}} className={welcomeVideoAdConfig.linkUrl?'block cursor-pointer':'block cursor-default'}><video src={welcomeVideoAdConfig.videoUrl} autoPlay muted playsInline loop className="w-full max-h-[78dvh] object-contain rounded-xl bg-black"/></a>
+            {welcomeVideoAdConfig.linkUrl&&<a href={welcomeVideoAdConfig.linkUrl} target="_blank" rel="noopener noreferrer" className="block text-center text-cyan-300 underline underline-offset-4 text-sm font-semibold break-all px-2">{welcomeVideoAdConfig.linkUrl}</a>}
+          </div>
+        </div>
+      )}
       {/* Welcome Screen on App Open (Full Page) */}
-      {showWelcomeModal && (
+      {welcomeVideoAdReady && !showWelcomeVideoAd && showWelcomeModal && (
         <div className="fixed inset-0 z-50 flex flex-col items-center justify-center p-6 bg-[#030611] animate-in fade-in duration-300">
           <div className="relative w-full max-w-lg bg-gradient-to-b from-[#0a1829] to-[#040b16] border border-cyan-500/40 rounded-3xl p-8 sm:p-12 shadow-[0_0_80px_rgba(6,182,212,0.25)] text-slate-100 flex flex-col items-center text-center gap-6 overflow-hidden">
             {/* Ambient Corner Glows */}
