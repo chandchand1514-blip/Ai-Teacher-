@@ -1938,6 +1938,18 @@ LOOK AT THE LIVE CAMERA FRAME IMAGE RIGHT NOW WITH YOUR VISION:
     grade: profile?.grade || activeStudents[0]?.grade || 'Class 2',
   });
 
+  const [targetedAds, setTargetedAds] = useState<any[]>([]);
+  useEffect(() => {
+    const deviceId = getDeviceId();
+    const studentName = (profile.name || '').trim();
+    safeFetchJson('/api/targeted-ads?'+new URLSearchParams({deviceId,studentName}).toString())
+      .then(data => { if(data?.success && Array.isArray(data.ads)) setTargetedAds(data.ads); })
+      .catch(()=>{});
+  }, [profile.name]);
+  const trackTargetedAd = (adId:string,event:string) => {
+    safeFetchJson('/api/targeted-ads/'+encodeURIComponent(adId)+'/event',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({studentName:profile.name||'Student',deviceId:getDeviceId(),event})}).catch(()=>{});
+  };
+
   if (location.pathname === '/admin') {
     const profileNameLower = (profile.name || '').trim().toLowerCase();
     return <AdminPage initialVerified={isAdminVerified} initialTab={adminInitialTab} />;
@@ -1945,6 +1957,16 @@ LOOK AT THE LIVE CAMERA FRAME IMAGE RIGHT NOW WITH YOUR VISION:
 
   return (
     <div className="h-full h-[100dvh] w-full fixed inset-0 bg-[#030611] text-slate-100 flex flex-col items-center justify-between p-3 sm:p-5 select-none overflow-hidden font-sans touch-none">
+      {targetedAds.length > 0 && (
+        <div className="fixed top-3 left-3 right-3 z-[80] max-w-xl mx-auto space-y-2 pointer-events-auto">
+          {targetedAds.map(ad => (
+            <div key={ad.id} className="rounded-2xl bg-slate-900 border border-amber-400/50 shadow-xl p-3 text-left">
+              <div className="flex items-start justify-between gap-2"><div><span className="text-[10px] uppercase font-black text-amber-300">Advertisement</span><h3 className="text-sm font-bold text-white">{ad.title}</h3><p className="text-xs text-slate-200 mt-1">{ad.text}</p></div><button onClick={()=>setTargetedAds(prev=>prev.filter(x=>x.id!==ad.id))} className="text-slate-400 p-1">✕</button></div>
+              {ad.linkUrl && <a href={ad.linkUrl} target="_blank" rel="noopener noreferrer" onClick={()=>trackTargetedAd(ad.id,'click')} className="inline-block mt-2 px-3 py-1.5 rounded-lg bg-amber-400 text-slate-950 text-xs font-bold">Learn More</a>}
+            </div>
+          ))}
+        </div>
+      )}
       {/* Welcome Screen on App Open (Full Page) */}
       {showWelcomeModal && (
         <div className="fixed inset-0 z-50 flex flex-col items-center justify-center p-6 bg-[#030611] animate-in fade-in duration-300">
