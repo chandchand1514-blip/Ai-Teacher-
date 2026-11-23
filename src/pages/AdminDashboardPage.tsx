@@ -4,7 +4,7 @@ import {
   Loader2, Award, Download, Lock, KeyRound, ArrowRight, RefreshCw, AlertCircle, 
   BookOpen, Check, Eye, EyeOff, Menu, ChevronLeft, Users, Search, Filter, 
   Plus, Star, RefreshCcw, FileSpreadsheet, ChevronRight, Activity, ExternalLink, FileCode, Terminal, Copy, MessageSquare,
-  Smartphone, Laptop, Bell, Trash2, Send, Crown, Paperclip, CheckCheck, Bot, Edit3, Sliders, RotateCcw, Mic, MicOff
+  Smartphone, Laptop, Bell, Trash2, Send, Crown, Paperclip, CheckCheck, Bot, Edit3, Sliders, RotateCcw, Mic, MicOff, Megaphone
 } from 'lucide-react';
 import { GradeLevel } from '../types';
 import { safeFetchJson } from '../utils/safeFetch';
