@@ -1165,26 +1165,7 @@ LOOK AT THE LIVE CAMERA FRAME IMAGE RIGHT NOW WITH YOUR VISION:
     return () => clearInterval(timer);
   }, [showWelcomeModal]);
 
-  // Auto-dismiss welcome modal after 5 seconds: ONLY close modal, do NOT auto start session
-  // User explicitly instructed: "Start voice call dabaenge tabhi dikhai Dena chahie usse pahle Nahin dikhai Dena chahie"
-  useEffect(() => {
-    // Do not start the welcome-screen timer until the video-ad config has loaded.
-    // This prevents the welcome screen from racing ahead before the ad is displayed.
-    if (!welcomeVideoAdReady || !showWelcomeModal || showWelcomeVideoAd) return;
-    const interval = setInterval(() => {
-      setWelcomeCountdown((prev) => {
-        if (prev <= 1) {
-          clearInterval(interval);
-          setShowWelcomeModal(false);
-          return 0;
-        }
-        return prev - 1;
-      });
-    }, 1000);
-    return () => clearInterval(interval);
-  }, [welcomeVideoAdReady, showWelcomeModal, showWelcomeVideoAd]);
-
-  const handleWelcomeStartWithMic = async () => {
+  // Keep welcome screen visible until the user explicitly starts; never leave a blank app screen.\n  const handleWelcomeStartWithMic = async () => {
     setShowWelcomeModal(false);
     requestMicPermission().catch(() => {});
     startSession().catch(() => {});
