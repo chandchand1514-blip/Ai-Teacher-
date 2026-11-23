@@ -417,41 +417,13 @@ function saveServerProfile(
 }
 
 export function getAdminPassword(): string {
-  try {
-    if (fs.existsSync(MEMORY_FILE)) {
-      const content = fs.readFileSync(MEMORY_FILE, 'utf-8');
-      const parsed = JSON.parse(content);
-      if (parsed.adminPassword && typeof parsed.adminPassword === 'string' && parsed.adminPassword.trim()) {
-        return parsed.adminPassword.trim();
-      }
-    }
-  } catch (e) {
-    console.error('Failed to read admin password:', e);
-  }
-  if (process.env.ADMIN_PASSCODE && process.env.ADMIN_PASSCODE.trim()) {
-    return process.env.ADMIN_PASSCODE.trim();
-  }
-  return '808999';
+  // Keep legacy profile-name verification and admin password change routes
+  // on the same source of truth as the secure admin passcode endpoints.
+  return getAdminPasscode();
 }
 
 export function setAdminPassword(newPassword: string): boolean {
-  try {
-    let store: Record<string, any> = { devices: {} };
-    if (fs.existsSync(MEMORY_FILE)) {
-      try {
-        const content = fs.readFileSync(MEMORY_FILE, 'utf-8');
-        store = JSON.parse(content) || { devices: {} };
-      } catch (_) {
-        store = { devices: {} };
-      }
-    }
-    store.adminPassword = newPassword.trim();
-    fs.writeFileSync(MEMORY_FILE, JSON.stringify(store, null, 2), 'utf-8');
-    return true;
-  } catch (e) {
-    console.error('Failed to set admin password:', e);
-    return false;
-  }
+  return setAdminPasscode(newPassword);
 }
 
 // -------------------------------------------------------------
