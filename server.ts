@@ -2738,13 +2738,44 @@ function readAds(): any[] { try { const x=JSON.parse(fs.readFileSync(ADS_FILE,'u
 function saveAds(items:any[]) { fs.writeFileSync(ADS_FILE, JSON.stringify(items,null,2),'utf-8'); }
 function readAdEvents():any[] { try { const x=JSON.parse(fs.readFileSync(AD_EVENTS_FILE,'utf-8')); return Array.isArray(x)?x:[]; } catch (_) { return []; } }
 app.get('/api/admin/ads', (req,res) => res.json({success:true, ads:readAds(), events:readAdEvents().slice(-500).reverse()}));
-app.post('/api/admin/ads', (req,res) => {
+app.post('/api/admin/ads', (req, res) => {
   try {
-    const { title, text, imageUrl, linkUrl, targetUsers, active=true } = req.body || {};
-    if (!String(title||'').trim() || !String(text||'').trim()) return res.status(400).json({success:false,error:'Title and ad text are required'});
-    const safeImageUrl=String(imageUrl||''); if(safeImageUrl && !safeImageUrl.startsWith('data:image/')) return res.status(400).json({success:false,error:'Advertisement image format invalid'}); if(safeImageUrl.length>8*1024*1024) return res.status(400).json({success:false,error:'Advertisement image too large; upload a smaller image'}); const ads=readAds(); const item={id:'ad_'+Date.now(),title:String(title).slice(0,120),text:String(text).slice(0,1000),imageUrl:safeImageUrl,linkUrl:String(linkUrl||'').slice(0,2000),targetUsers:Array.isArray(targetUsers)?targetUsers.map(String):[],active:Boolean(active),createdAt:new Date().toISOString(),updatedAt:new Date().toISOString()};
-    ads.unshift(item); saveAds(ads); res.json({success:true,ad:item,ads});
-  } catch(err:any){res.status(500).json({success:false,error:err.message});}
+    const body = req.body || {};
+    const title = String(body.title || '').trim();
+    const text = String(body.text || '').trim();
+    const imageUrl = String(body.imageUrl || '');
+    const linkUrl = String(body.linkUrl || '');
+    const targetUsers = Array.isArray(body.targetUsers) ? body.targetUsers.map(String) : [];
+    const active = body.active !== false;
+
+    if (!title || !text) {
+      return res.status(400).json({ success: false, error: 'Title and ad text are required' });
+    }
+    if (imageUrl && !imageUrl.startsWith('data:image/')) {
+      return res.status(400).json({ success: false, error: 'Advertisement image format invalid' });
+    }
+    if (imageUrl.length > 8 * 1024 * 1024) {
+      return res.status(400).json({ success: false, error: 'Advertisement image too large; upload a smaller image' });
+    }
+
+    const ads = readAds();
+    const item = {
+      id: 'ad_' + Date.now(),
+      title: title.slice(0, 120),
+      text: text.slice(0, 1000),
+      imageUrl,
+      linkUrl: linkUrl.slice(0, 2000),
+      targetUsers,
+      active,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString()
+    };
+    ads.unshift(item);
+    saveAds(ads);
+    return res.json({ success: true, ad: item, ads });
+  } catch (err: any) {
+    return res.status(500).json({ success: false, error: err.message });
+  }
 });
 app.put('/api/admin/ads/:id', (req,res) => {
   try { const ads=readAds(); const i=ads.findIndex(a=>a.id===req.params.id); if(i<0)return res.status(404).json({success:false,error:'Ad not found'}); ads[i]={...ads[i],...req.body,id:ads[i].id,updatedAt:new Date().toISOString()}; saveAds(ads); res.json({success:true,ad:ads[i],ads}); }
