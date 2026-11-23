@@ -2012,30 +2012,37 @@ LOOK AT THE LIVE CAMERA FRAME IMAGE RIGHT NOW WITH YOUR VISION:
   return (
     <div className="h-full h-[100dvh] w-full fixed inset-0 bg-[#030611] text-slate-100 flex flex-col items-center justify-between p-3 sm:p-5 select-none overflow-hidden font-sans touch-none">
       {welcomeVideoAdReady && showWelcomeVideoAd && (
-        <div className="fixed inset-0 z-[60] bg-[#05070b] flex flex-col items-center justify-center p-3 sm:p-5 animate-in fade-in duration-300">
-          <div className="w-full max-w-4xl overflow-hidden rounded-2xl border border-white/10 bg-[#11151c] shadow-[0_24px_100px_rgba(0,0,0,0.65)]">
-            <div className="flex items-center justify-between px-4 py-3 bg-gradient-to-r from-[#171d27] to-[#0b0e13] border-b border-white/10">
-              <div className="flex items-center gap-2">
-                <span className="rounded-md bg-white/10 px-2 py-1 text-[10px] font-bold uppercase tracking-[0.18em] text-white/70">Advertisement</span>
-                <span className="text-xs text-white/45">Sponsored</span>
+        <div className="fixed inset-0 z-[60] bg-black animate-in fade-in duration-300">
+          <div className="absolute inset-0">
+            <video
+              src={welcomeVideoAdConfig.videoUrl}
+              autoPlay
+              muted={welcomeVideoAdMuted}
+              playsInline
+              loop
+              onClick={() => { if (welcomeVideoAdConfig.linkUrl) window.open(welcomeVideoAdConfig.linkUrl, '_blank', 'noopener,noreferrer'); }}
+              className="w-full h-full object-contain bg-black cursor-pointer"
+            />
+            {welcomeVideoAdConfig.title && (
+              <div className="pointer-events-none absolute bottom-16 left-4 right-4 sm:bottom-20 sm:left-8 sm:right-8 text-center">
+                <span className="inline-block max-w-full rounded-xl bg-black/55 px-4 py-2.5 text-base sm:text-xl font-bold text-white drop-shadow-lg backdrop-blur-sm">
+                  {welcomeVideoAdConfig.title}
+                </span>
               </div>
-              {welcomeVideoAdCountdown>0
-                ? <span className="rounded-full bg-black/40 px-3 py-1.5 text-xs font-semibold text-white/75">{welcomeVideoAdCountdown}s</span>
-                : <button type="button" aria-label="Skip advertisement" onClick={()=>setShowWelcomeVideoAd(false)} className="flex items-center gap-1.5 rounded-full bg-white/10 px-3 py-1.5 text-sm font-semibold text-white hover:bg-white/20"><X className="w-4 h-4"/> Skip</button>}
-            </div>
-            <div className="relative bg-black">
-              <a href={welcomeVideoAdConfig.linkUrl||undefined} target="_blank" rel="noopener noreferrer" onClick={e=>{if(!welcomeVideoAdConfig.linkUrl)e.preventDefault();}} className={welcomeVideoAdConfig.linkUrl?'block cursor-pointer':'block cursor-default'}>
-                <video src={welcomeVideoAdConfig.videoUrl} autoPlay muted={welcomeVideoAdMuted} playsInline loop className="w-full max-h-[70dvh] object-contain bg-black"/>
-              </a>
-              {welcomeVideoAdConfig.title&&<div className="pointer-events-none absolute bottom-4 left-4 right-4 sm:bottom-6 sm:left-6 sm:right-6 text-center"><span className="inline-block max-w-full rounded-lg bg-black/65 px-4 py-2 text-base sm:text-lg font-bold text-white drop-shadow-lg backdrop-blur-sm">{welcomeVideoAdConfig.title}</span></div>}
-            </div>
-            <div className="flex items-center justify-end gap-3 px-4 py-3 bg-[#11151c]">
-              <button type="button" aria-label={welcomeVideoAdMuted?'Turn sound on':'Turn sound off'} onClick={()=>setWelcomeVideoAdMuted(v=>!v)} className="flex items-center gap-2 rounded-full border border-white/15 bg-white/5 px-3 py-2 text-xs font-semibold text-white hover:bg-white/10">
-                {welcomeVideoAdMuted?<Volume2 className="w-4 h-4"/>:<Volume2 className="w-4 h-4 text-cyan-300"/>}
-                {welcomeVideoAdMuted?'Sound off':'Sound on'}
-              </button>
-            </div>
+            )}
           </div>
+          <div className="absolute top-3 left-3 z-10 flex items-center gap-2">
+            <span className="rounded bg-black/45 px-2 py-1 text-[10px] font-bold uppercase tracking-wider text-white/65 backdrop-blur-sm">Advertisement</span>
+          </div>
+          <div className="absolute top-3 right-3 z-10">
+            {welcomeVideoAdCountdown>0
+              ? <span className="rounded-full bg-black/55 px-3 py-1.5 text-xs font-semibold text-white/80 backdrop-blur-sm">{welcomeVideoAdCountdown}s</span>
+              : <button type="button" aria-label="Skip advertisement" onClick={()=>setShowWelcomeVideoAd(false)} className="flex items-center gap-1.5 rounded-full bg-black/55 px-3 py-1.5 text-sm font-semibold text-white backdrop-blur-sm hover:bg-black/70"><X className="w-4 h-4"/> Skip</button>}
+          </div>
+          <button type="button" aria-label={welcomeVideoAdMuted?'Turn sound on':'Turn sound off'} onClick={()=>setWelcomeVideoAdMuted(v=>!v)} className="absolute bottom-3 left-3 z-10 flex items-center gap-2 rounded-full bg-black/55 px-3 py-2 text-xs font-semibold text-white backdrop-blur-sm hover:bg-black/70">
+            {welcomeVideoAdMuted?<Volume2 className="w-4 h-4"/>:<Volume2 className="w-4 h-4 text-cyan-300"/>}
+            {welcomeVideoAdMuted?'Sound off':'Sound on'}
+          </button>
         </div>
       )}
       {/* Welcome Screen on App Open (Full Page) */}
