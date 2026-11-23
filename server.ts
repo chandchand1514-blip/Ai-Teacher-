@@ -100,7 +100,7 @@ const app = express();
 const port = Number(process.env.PORT || 3000);
 
 // Persistent storage directory. On Render set DATA_DIR to the mounted disk path (e.g. /var/data).
-const DATA_DIR = path.resolve(process.env.DATA_DIR || (process.env.RENDER ? '/var/data' : process.cwd()));
+const DATA_DIR = path.resolve(process.env.DATA_DIR || process.cwd());
 try { fs.mkdirSync(DATA_DIR, { recursive: true }); } catch (e) { console.error('Unable to create DATA_DIR:', e); }
 
 app.use(express.json({ limit: '32mb' }));
