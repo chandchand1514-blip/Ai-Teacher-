@@ -1340,6 +1340,10 @@ const AI_BOT_CONFIG_FILE = path.join(DATA_DIR, 'ai_bot_config.json');
 const ADMIN_PASSCODE_FILE = path.join(DATA_DIR, 'admin_passcode.json');
 
 function getAdminPasscode(): string {
+  // Render/environment configuration must override stale persisted passcodes.
+  if (process.env.ADMIN_PASSCODE && process.env.ADMIN_PASSCODE.trim()) {
+    return process.env.ADMIN_PASSCODE.trim();
+  }
   if (fs.existsSync(ADMIN_PASSCODE_FILE)) {
     try {
       const data = JSON.parse(fs.readFileSync(ADMIN_PASSCODE_FILE, 'utf-8'));
@@ -1347,9 +1351,6 @@ function getAdminPasscode(): string {
         return data.passcode.trim();
       }
     } catch (_) {}
-  }
-  if (process.env.ADMIN_PASSCODE && process.env.ADMIN_PASSCODE.trim()) {
-    return process.env.ADMIN_PASSCODE.trim();
   }
   return '808999';
 }
