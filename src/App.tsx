@@ -2215,12 +2215,11 @@ LOOK AT THE LIVE CAMERA FRAME IMAGE RIGHT NOW WITH YOUR VISION:
         {!isLiveActive ? (
           <div className="flex flex-col items-center gap-2.5 w-full">
             {targetedAds.length > 0 && (
-              <div className="w-full max-w-sm rounded-xl border border-amber-400/40 bg-slate-900/90 p-2 shadow-lg text-left">
+              <div className="w-full max-w-sm bg-transparent p-0 text-left">
                 {targetedAds.map(ad => (
                   <div key={ad.id} className="flex items-center gap-2.5">
-                    {ad.imageUrl && <a href={ad.linkUrl || undefined} target={ad.linkUrl ? "_blank" : undefined} rel="noopener noreferrer" onClick={()=>ad.linkUrl&&trackTargetedAd(ad.id,'click')} className="shrink-0"><img src={ad.imageUrl} alt={ad.title||'Advertisement'} className="w-24 h-20 rounded-lg object-contain bg-slate-800 border border-slate-700" loading="eager" onError={(e)=>{e.currentTarget.style.display='none'; console.warn('Advertisement image failed to load', ad.id);}} /></a>}
-                    <div className="min-w-0 flex-1"><span className="text-[9px] uppercase font-black text-amber-300">Advertisement</span><h3 className="text-xs font-bold text-white truncate">{ad.title}</h3><p className="text-[10px] text-slate-200 line-clamp-2">{ad.text}</p>{ad.linkUrl && !ad.imageUrl && <a href={ad.linkUrl} target="_blank" rel="noopener noreferrer" onClick={()=>trackTargetedAd(ad.id,'click')} className="text-[10px] text-amber-300 underline">Open Link</a>}</div>
-                    <button onClick={()=>setTargetedAds(prev=>prev.filter(x=>x.id!==ad.id))} className="text-slate-400 p-1 text-xs">✕</button>
+                    {ad.imageUrl && <a href={ad.linkUrl || undefined} target={ad.linkUrl ? "_blank" : undefined} rel="noopener noreferrer" onClick={()=>ad.linkUrl&&trackTargetedAd(ad.id,'click')} className="shrink-0"><img src={ad.imageUrl} alt={ad.title||'Ad image'} className="w-24 h-20 rounded-lg object-contain bg-transparent" loading="eager" onError={(e)=>{e.currentTarget.style.display='none'; console.warn('Advertisement image failed to load', ad.id);}} /></a>}
+                    <div className="min-w-0 flex-1"><h3 className="text-xs font-bold text-white truncate">{ad.title}</h3><p className="text-[10px] text-slate-200 line-clamp-2">{ad.text}</p>{ad.linkUrl && !ad.imageUrl && <a href={ad.linkUrl} target="_blank" rel="noopener noreferrer" onClick={()=>trackTargetedAd(ad.id,'click')} className="text-[10px] text-amber-300 underline">Open Link</a>}</div>
                   </div>
                 ))}
               </div>
