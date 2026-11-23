@@ -2240,9 +2240,9 @@ LOOK AT THE LIVE CAMERA FRAME IMAGE RIGHT NOW WITH YOUR VISION:
               <div className="w-full max-w-sm px-1 text-left">
                 {targetedAds.filter((ad:any)=>ad.placement!=='top').map(ad => {
                   const adContent = (
-                    <div className="flex items-center gap-3 w-full rounded-full bg-gradient-to-r from-slate-800 via-slate-700 to-indigo-900 border-2 border-white/30 p-2.5 pr-10 shadow-[0_6px_24px_rgba(0,0,0,0.45)] relative min-h-[76px]">
-                      {ad.imageUrl && <img src={ad.imageUrl} alt={ad.title||'Ad image'} className="block w-20 h-20 shrink-0 rounded-xl object-cover border border-white/30 bg-slate-900" loading="eager" onError={(e)=>{e.currentTarget.alt='Advertisement image could not load'; console.warn('Advertisement image failed to load', ad.id);}} />}
-                      <div className="min-w-0 flex-1"><h3 className="text-sm font-extrabold text-white line-clamp-2">{ad.title}</h3><p className="text-xs text-slate-200 line-clamp-2 mt-1">{ad.text}</p><span className="inline-flex mt-1.5 text-[10px] font-bold text-cyan-300">Tap to open ↗</span></div>
+                    <div className="flex items-center justify-center gap-3 w-full rounded-full bg-gradient-to-r from-slate-800 via-slate-700 to-indigo-900 border border-white/25 p-3 pr-12 shadow-[0_6px_24px_rgba(0,0,0,0.45)] relative min-h-[88px]">
+                      {ad.imageUrl && <img src={ad.imageUrl} alt={ad.title||'Ad image'} className="block w-16 h-16 shrink-0 rounded-full object-cover border border-white/30 bg-slate-900" loading="eager" onError={(e)=>{e.currentTarget.alt='Advertisement image could not load'; console.warn('Advertisement image failed to load', ad.id);}} />}
+                      <div className="min-w-0 flex-1 text-center"><h3 className="text-sm font-extrabold text-white line-clamp-2">{ad.title}</h3><p className="text-xs text-slate-200 line-clamp-2 mt-1">{ad.text}</p><span className="inline-flex mt-1.5 text-[10px] font-bold text-cyan-300">Tap to open ↗</span></div>
                     </div>
                   );
                   return (
@@ -2252,7 +2252,7 @@ LOOK AT THE LIVE CAMERA FRAME IMAGE RIGHT NOW WITH YOUR VISION:
                           {adContent}
                         </a>
                       ) : adContent}
-                      <button type="button" aria-label="Temporarily hide advertisement" title="Hide ad for 10 minutes" onClick={dismissAdTemporarily} className="absolute right-2 top-2 z-10 w-6 h-6 rounded-full bg-black/60 hover:bg-black/80 border border-white/30 text-white flex items-center justify-center text-xs">✕</button>
+                      <button type="button" aria-label="Temporarily hide advertisement" title="Hide ad for 10 minutes" onClick={dismissAdTemporarily} className="absolute right-4 top-3 z-10 w-5 h-5 text-white/80 hover:text-white flex items-center justify-center text-xs bg-transparent border-0">✕</button>
                     </div>
                   );
                 })}
