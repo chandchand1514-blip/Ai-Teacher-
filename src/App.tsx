@@ -215,7 +215,7 @@ export default function App() {
   }, []);
   useEffect(() => { if(showWelcomeVideoAd)setWelcomeVideoAdLoaded(false); }, [showWelcomeVideoAd, welcomeVideoAdConfig.videoUrl]);
   useEffect(() => { if(!showWelcomeVideoAd||welcomeVideoAdCountdown<=0)return;const timer=window.setTimeout(()=>setWelcomeVideoAdCountdown(v=>Math.max(0,v-1)),1000);return()=>window.clearTimeout(timer); },[showWelcomeVideoAd,welcomeVideoAdCountdown]);
-  useEffect(() => { if(!showWelcomeVideoAd)return;const timer=window.setTimeout(()=>{const video=welcomeVideoAdRef.current;const actuallyPlaying=Boolean(video&&video.readyState>=2&&video.videoWidth>0&&video.videoHeight>0&&!video.paused);if(!actuallyPlaying){setShowWelcomeVideoAd(false);setWelcomeVideoAdLoaded(false);setWelcomeVideoAdCountdown(0);setShowWelcomeModal(true);setWelcomeCountdown(5);}},8000);return()=>clearTimeout(timer);},[showWelcomeVideoAd,welcomeVideoAdLoaded]);
+  useEffect(() => { if(!showWelcomeVideoAd)return;const timer=window.setTimeout(()=>{const video=welcomeVideoAdRef.current;const actuallyPlaying=Boolean(video&&video.readyState>=2&&video.videoWidth>0&&video.videoHeight>0&&!video.paused);if(!actuallyPlaying){setShowWelcomeVideoAd(false);setWelcomeVideoAdLoaded(false);setWelcomeVideoAdCountdown(0);setShowWelcomeModal(true);setWelcomeCountdown(5);}},5000);return()=>clearTimeout(timer);},[showWelcomeVideoAd,welcomeVideoAdLoaded]);
   const [showWelcomeModal, setShowWelcomeModal] = useState<boolean>(true);
   const [welcomeCountdown, setWelcomeCountdown] = useState<number>(5);
   const [typedTitleText, setTypedTitleText] = useState<string>('');
@@ -2014,6 +2014,15 @@ LOOK AT THE LIVE CAMERA FRAME IMAGE RIGHT NOW WITH YOUR VISION:
               onClick={() => { if (welcomeVideoAdConfig.linkUrl) window.open(welcomeVideoAdConfig.linkUrl, '_blank', 'noopener,noreferrer'); }}
               className="w-full h-full object-contain bg-black cursor-pointer"
             />
+            {!welcomeVideoAdLoaded && (
+              <div className="absolute inset-0 z-20 flex items-center justify-center bg-black/90 text-white">
+                <div className="flex flex-col items-center gap-3 rounded-2xl border border-white/15 bg-black/40 px-6 py-5 text-center">
+                  <div className="h-9 w-9 animate-spin rounded-full border-2 border-white/25 border-t-cyan-300" />
+                  <p className="text-sm font-semibold">Advertisement loading…</p>
+                  <p className="text-xs text-white/60">If video cannot load, Welcome screen will open automatically.</p>
+                </div>
+              </div>
+            )}
             {welcomeVideoAdConfig.title && (
               <div className="pointer-events-none absolute bottom-0 left-0 right-0 z-10 px-4 pb-5 sm:px-8 sm:pb-7 text-center">
                 <div className="mx-auto max-w-3xl rounded-2xl border border-white/15 bg-gradient-to-r from-black/80 via-black/65 to-black/80 px-5 py-3 shadow-2xl backdrop-blur-md">
