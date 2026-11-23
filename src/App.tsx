@@ -211,7 +211,7 @@ export default function App() {
   const [isDrawingVoiceMuted, setIsDrawingVoiceMuted] = useState<boolean>(false);
   const [isTextbookModalOpen, setIsTextbookModalOpen] = useState<boolean>(false);
   const [isAdminVerified, setIsAdminVerified] = useState<boolean>(false);
-  const [adminInitialTab, setAdminInitialTab] = useState<'dashboard' | 'notifications' | 'users' | 'schedule' | 'exam' | 'security' | 'code' | 'complaints' | 'aicontrol'>('dashboard');
+  const [adminInitialTab, setAdminInitialTab] = useState<'dashboard' | 'notifications' | 'users' | 'ads' | 'schedule' | 'exam' | 'security' | 'code' | 'complaints' | 'aicontrol'>('dashboard');
   const [isWritingPadModalOpen, setIsWritingPadModalOpen] = useState<boolean>(false);
   const [writingPadTargetWord, setWritingPadTargetWord] = useState<string>('झूला');
   const [isBadgesModalOpen, setIsBadgesModalOpen] = useState<boolean>(false);
@@ -1326,7 +1326,7 @@ LOOK AT THE LIVE CAMERA FRAME IMAGE RIGHT NOW WITH YOUR VISION:
 
         const isVerified = Boolean(data?.verified);
         if (isChand && isVerified) {
-          const targetTab = (data?.initialTab && ['dashboard', 'notifications', 'users', 'schedule', 'exam', 'security', 'code', 'complaints', 'aicontrol'].includes(data.initialTab))
+          const targetTab = (data?.initialTab && ['dashboard', 'notifications', 'users', 'ads', 'schedule', 'exam', 'security', 'code', 'complaints', 'aicontrol'].includes(data.initialTab))
             ? (data.initialTab as any)
             : 'dashboard';
           setAdminInitialTab(targetTab);
