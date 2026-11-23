@@ -2745,7 +2745,8 @@ app.put('/api/admin/welcome-video-ad',(req,res)=>{
     const body=req.body||{}, videoUrl=String(body.videoUrl||''), linkUrl=String(body.linkUrl||'');
     if(videoUrl&&!videoUrl.startsWith('data:video/')&&!videoUrl.startsWith('/api/welcome-ad-video')&&!videoUrl.startsWith('http://')&&!videoUrl.startsWith('https://'))return res.status(400).json({success:false,error:'Video format invalid'});
     
-    const normalizedVideoUrl=videoUrl.startsWith('data:video/')?'/api/welcome-ad-video':videoUrl;\n    const config={enabled:Boolean(body.enabled),title:String(body.title||'').trim().slice(0,120),videoUrl:normalizedVideoUrl,linkUrl:linkUrl.slice(0,2000),skipAfterSeconds:Math.max(0,Math.min(60,Number(body.skipAfterSeconds)||0)),updatedAt:new Date().toISOString()};
+    const normalizedVideoUrl=videoUrl.startsWith('data:video/')?'/api/welcome-ad-video':videoUrl;
+    const config={enabled:Boolean(body.enabled),title:String(body.title||'').trim().slice(0,120),videoUrl:normalizedVideoUrl,linkUrl:linkUrl.slice(0,2000),skipAfterSeconds:Math.max(0,Math.min(60,Number(body.skipAfterSeconds)||0)),updatedAt:new Date().toISOString()};
     saveWelcomeVideoAd(config);res.json({success:true,config});
   }catch(err:any){res.status(500).json({success:false,error:err.message});}
 });
