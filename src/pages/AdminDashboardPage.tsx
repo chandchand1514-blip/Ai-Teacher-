@@ -57,6 +57,7 @@ export interface UserRecord {
   studentRole?: string;
   islamicTitle?: string;
   isLiveNow?: boolean;
+  isBlocked?: boolean;
   hasDownloadedApp?: boolean;
   appInstallAction?: string;
   appInstallTimestamp?: string | null;
