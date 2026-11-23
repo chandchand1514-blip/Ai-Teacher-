@@ -110,7 +110,6 @@ export const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({
   onSaveExamResult
 }) => {
   // Authentication & Security State
-  const [adminPasscode, setAdminPasscode] = useState<string>('808999');
   const [isUnlocked, setIsUnlocked] = useState<boolean>(initialVerified !== false);
 
   // Passcode Change Modal State
@@ -122,19 +121,6 @@ export const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({
   const [passcodeModalSuccess, setPasscodeModalSuccess] = useState<string>('');
   const [isSubmittingPasscodeChange, setIsSubmittingPasscodeChange] = useState<boolean>(false);
 
-  const fetchAdminPasscode = React.useCallback(() => {
-    safeFetchJson('/api/admin/passcode')
-      .then(data => {
-        if (data?.success && data.passcode) {
-          setAdminPasscode(data.passcode);
-        }
-      })
-      .catch(console.error);
-  }, []);
-
-  useEffect(() => {
-    fetchAdminPasscode();
-  }, [fetchAdminPasscode]);
 
   // Active navigation tab
   const [activeTab, setActiveTab] = useState<'dashboard' | 'notifications' | 'users' | 'schedule' | 'exam' | 'security' | 'code' | 'complaints' | 'aicontrol'>(initialTab);
@@ -1126,10 +1112,6 @@ export const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({
     setPasscodeModalError('');
     setPasscodeModalSuccess('');
 
-    if (oldPassInput.trim() !== adminPasscode) {
-      setPasscodeModalError('Purana password galat hai! Sahi current password darj karein.');
-      return;
-    }
     if (!newPassInput.trim() || newPassInput.trim().length < 3) {
       setPasscodeModalError('Naya passcode kam se kam 3 characters ka hona chahie!');
       return;
@@ -1149,8 +1131,7 @@ export const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({
           newPasscode: newPassInput.trim(),
         }),
       });
-      if (data?.success && data.passcode) {
-        setAdminPasscode(data.passcode);
+      if (data?.success) {
         setPasscodeModalSuccess('Security Passcode badal gaya hai! ✅');
         setTimeout(() => {
           setIsPasscodeModalOpen(false);
@@ -1481,7 +1462,7 @@ export const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({
                       Change
                     </button>
                   </div>
-                  <div className="text-xl font-black text-cyan-200 font-mono tracking-wider">{adminPasscode}</div>
+                  <div className="text-xl font-black text-cyan-200 font-mono tracking-wider">Protected</div>
                 </div>
 
                 <div className="p-4 rounded-2xl bg-[#091526] border border-cyan-500/20 shadow-lg space-y-1.5">
@@ -2294,7 +2275,7 @@ export const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({
                     </button>
                   </div>
                   <div className="p-3 rounded-2xl bg-slate-900 border border-slate-800 text-xs font-mono text-amber-300">
-                    {adminPasscode}
+                    Protected
                   </div>
                 </div>
               </div>
