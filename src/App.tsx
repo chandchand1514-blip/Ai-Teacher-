@@ -201,6 +201,7 @@ export default function App() {
   const [welcomeVideoAdReady, setWelcomeVideoAdReady] = useState(false);
   const [showWelcomeVideoAd, setShowWelcomeVideoAd] = useState(false);
   const [welcomeVideoAdMuted, setWelcomeVideoAdMuted] = useState(true);
+  const welcomeVideoAdRef = useRef<HTMLVideoElement | null>(null);
   const [welcomeVideoAdCountdown, setWelcomeVideoAdCountdown] = useState(5);
   useEffect(() => {
     safeFetchJson('/api/welcome-video-ad').then(data => {
@@ -2015,6 +2016,7 @@ LOOK AT THE LIVE CAMERA FRAME IMAGE RIGHT NOW WITH YOUR VISION:
         <div className="fixed inset-0 z-[60] bg-black animate-in fade-in duration-300">
           <div className="absolute inset-0">
             <video
+              ref={welcomeVideoAdRef}
               src={welcomeVideoAdConfig.videoUrl}
               autoPlay
               muted={welcomeVideoAdMuted}
@@ -2024,7 +2026,7 @@ LOOK AT THE LIVE CAMERA FRAME IMAGE RIGHT NOW WITH YOUR VISION:
               className="w-full h-full object-contain bg-black cursor-pointer"
             />
             {welcomeVideoAdConfig.title && (
-              <div className="pointer-events-none absolute bottom-16 left-4 right-4 sm:bottom-20 sm:left-8 sm:right-8 text-center">
+              <div className="pointer-events-none absolute bottom-5 left-4 right-4 sm:bottom-7 sm:left-8 sm:right-8 text-center">
                 <span className="inline-block max-w-full rounded-xl bg-black/55 px-4 py-2.5 text-base sm:text-xl font-bold text-white drop-shadow-lg backdrop-blur-sm">
                   {welcomeVideoAdConfig.title}
                 </span>
@@ -2039,9 +2041,8 @@ LOOK AT THE LIVE CAMERA FRAME IMAGE RIGHT NOW WITH YOUR VISION:
               ? <span className="rounded-full bg-black/55 px-3 py-1.5 text-xs font-semibold text-white/80 backdrop-blur-sm">{welcomeVideoAdCountdown}s</span>
               : <button type="button" aria-label="Skip advertisement" onClick={()=>setShowWelcomeVideoAd(false)} className="flex items-center gap-1.5 rounded-full bg-black/55 px-3 py-1.5 text-sm font-semibold text-white backdrop-blur-sm hover:bg-black/70"><X className="w-4 h-4"/> Skip</button>}
           </div>
-          <button type="button" aria-label={welcomeVideoAdMuted?'Turn sound on':'Turn sound off'} onClick={()=>setWelcomeVideoAdMuted(v=>!v)} className="absolute bottom-3 left-3 z-10 flex items-center gap-2 rounded-full bg-black/55 px-3 py-2 text-xs font-semibold text-white backdrop-blur-sm hover:bg-black/70">
-            {welcomeVideoAdMuted?<Volume2 className="w-4 h-4"/>:<Volume2 className="w-4 h-4 text-cyan-300"/>}
-            {welcomeVideoAdMuted?'Sound off':'Sound on'}
+          <button type="button" aria-label={welcomeVideoAdMuted?'Sound on':'Sound off'} title={welcomeVideoAdMuted?'Sound on':'Sound off'} onClick={()=>{const nextMuted=!welcomeVideoAdMuted;setWelcomeVideoAdMuted(nextMuted);if(welcomeVideoAdRef.current){welcomeVideoAdRef.current.muted=nextMuted;if(!nextMuted)welcomeVideoAdRef.current.play().catch(()=>{});}}} className="absolute bottom-3 left-3 z-10 flex h-10 w-10 items-center justify-center rounded-full bg-black/55 text-white backdrop-blur-sm hover:bg-black/70">
+            {welcomeVideoAdMuted?<VolumeX className="w-5 h-5"/>:<Volume2 className="w-5 h-5 text-cyan-300"/>}
           </button>
         </div>
       )}
