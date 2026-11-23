@@ -1035,14 +1035,6 @@ LOOK AT THE LIVE CAMERA FRAME IMAGE RIGHT NOW WITH YOUR VISION:
     }
   }, [adminRedirect, navigate]);
 
-  useEffect(() => {
-    if (location.pathname === '/admin') {
-      const profileNameLower = (profile.name || '').trim().toLowerCase();
-      if (!isAdminVerified) {
-        navigate('/');
-      }
-    }
-  }, [location.pathname, profile.name, isAdminVerified, navigate]);
 
 
   // Save boardContent & activeExam to localStorage for Session Resume persistence
@@ -1950,9 +1942,6 @@ LOOK AT THE LIVE CAMERA FRAME IMAGE RIGHT NOW WITH YOUR VISION:
 
   if (location.pathname === '/admin') {
     const profileNameLower = (profile.name || '').trim().toLowerCase();
-    if (!isAdminVerified) {
-      return null;
-    }
     return <AdminPage initialVerified={isAdminVerified} initialTab={adminInitialTab} />;
   }
 
