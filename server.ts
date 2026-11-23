@@ -8438,6 +8438,7 @@ ${activeDirectives.map((d, i) => `    ${i + 1}. "${d.commandText}"`).join('\n')}
             clientWs.send(JSON.stringify({ type: 'profile_updated', profile: finalProfile }));
             if (liveSession) liveSession.sendRealtimeInput({ text: '[NAME CHANGE CONFIRMED]: User chose ' + action.toUpperCase() + '. Profile saved. Address the student as ' + finalProfile.name + '.' });
           }
+        }
       } else if (parsed.type === 'update_role') {
         const newRole = String(parsed.role || 'Basic User').trim();
         const newGrade = parsed.grade ? String(parsed.grade).trim() : undefined;
