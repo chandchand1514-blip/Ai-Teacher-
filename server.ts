@@ -1139,6 +1139,7 @@ export function upsertActiveLiveSession(
 
 // Admin API authorization: passcode verification issues a short-lived HttpOnly session cookie.
 const adminSessions = new Map<string, number>();
+const adminLoginAttempts = new Map<string, { count: number; resetAt: number }>();
 const ADMIN_SESSION_COOKIE = 'ai_teacher_admin_session';
 const ADMIN_SESSION_TTL_MS = 8 * 60 * 60 * 1000;
 function getAdminSessionToken(req: express.Request): string {
@@ -1861,14 +1862,24 @@ app.get('/api/admin/ai-bot/config', (_req, res) => {
 // Admin Security Passcode Endpoints
 
 app.post('/api/admin/verify-passcode', (req, res) => {
+  const ip = String(req.ip || req.socket.remoteAddress || 'unknown');
+  const now = Date.now();
+  const attempts = adminLoginAttempts.get(ip);
+  if (attempts && attempts.resetAt > now && attempts.count >= 5) {
+    return res.status(429).json({ success: false, verified: false, error: 'Too many attempts. Try again after 15 minutes.' });
+  }
   const { passcode } = req.body;
   const current = getAdminPasscode();
   if (String(passcode || '').trim() === current) {
+    adminLoginAttempts.delete(ip);
     const token = crypto.randomBytes(32).toString('hex');
     adminSessions.set(token, Date.now() + ADMIN_SESSION_TTL_MS);
     res.cookie(ADMIN_SESSION_COOKIE, token, { httpOnly: true, secure: process.env.NODE_ENV === 'production', sameSite: 'strict', maxAge: ADMIN_SESSION_TTL_MS, path: '/api/admin' });
     return res.json({ success: true, verified: true });
   }
+  const nextAttempts = attempts && attempts.resetAt > now ? attempts : { count: 0, resetAt: now + 15 * 60 * 1000 };
+  nextAttempts.count += 1;
+  adminLoginAttempts.set(ip, nextAttempts);
   return res.json({ success: false, verified: false, error: 'Incorrect Security Passcode' });
 });
 
