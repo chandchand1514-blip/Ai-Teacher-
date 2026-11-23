@@ -82,7 +82,7 @@ interface AdminDashboardPageProps {
   studentName: string;
   lastExamDate?: string;
   initialVerified?: boolean;
-  initialTab?: 'dashboard' | 'notifications' | 'users' | 'schedule' | 'exam' | 'security' | 'code' | 'complaints' | 'aicontrol';
+  initialTab?: 'dashboard' | 'notifications' | 'users' | 'ads' | 'schedule' | 'exam' | 'security' | 'code' | 'complaints' | 'aicontrol';
   onClose: () => void;
   onSpeakText: (text: string, voice?: string) => void;
   onAddStar?: () => void;
@@ -1385,6 +1385,7 @@ export const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({
               { id: 'dashboard', label: 'Dashboard', icon: BarChart3 },
               { id: 'notifications', label: 'App Alerts', icon: Bell, badge: notifications.length > 0 ? `${notifications.length}` : undefined },
               { id: 'users', label: 'Users', icon: Users, badge: usersList.length > 0 ? `${usersList.length}` : undefined },
+              { id: 'ads', label: 'Advertisements', icon: Megaphone, badge: adsList.length > 0 ? `${adsList.length}` : undefined },
               { id: 'aicontrol', label: 'AI Control', icon: Bot, badge: directives.filter(d => d.active).length > 0 ? `${directives.filter(d => d.active).length}` : undefined },
               { id: 'schedule', label: 'Study Plan', icon: Calendar },
               { id: 'exam', label: 'Weekly Exam', icon: Trophy },
@@ -1712,24 +1713,7 @@ export const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({
               </div>
 
               {/* Targeted Ads Manager */}
-              <div className="p-4 rounded-2xl bg-[#091526] border border-fuchsia-500/30 space-y-3">
-                <h3 className="text-sm font-black text-fuchsia-200">Targeted Advertisement Manager</h3>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                  <input value={adTitle} onChange={e=>setAdTitle(e.target.value)} placeholder="Ad title" className="px-3 py-2 rounded-xl bg-slate-900 border border-slate-700 text-white text-xs"/>
-                  <input value={adLink} onChange={e=>setAdLink(e.target.value)} placeholder="Optional link URL" className="px-3 py-2 rounded-xl bg-slate-900 border border-slate-700 text-white text-xs"/>
-                  <div className="flex flex-col gap-2 px-3 py-2 rounded-xl bg-slate-900 border border-slate-700">
-                  <label className="text-xs text-slate-300 font-semibold">Choose advertisement image from Gallery</label>
-                  <input type="file" accept="image/*" onChange={e=>{const file=e.target.files?.[0]; if(!file)return; if(file.size>4*1024*1024){alert('Image 4 MB se chhoti honi chahiye');e.target.value='';return;} const reader=new FileReader();reader.onload=()=>setAdImageUrl(String(reader.result||''));reader.readAsDataURL(file);}} className="text-xs text-slate-300 file:mr-2 file:px-3 file:py-1.5 file:rounded-lg file:border-0 file:bg-fuchsia-600 file:text-white file:font-bold"/>
-                  {adImageUrl&&<div className="flex items-center gap-2"><img src={adImageUrl} alt="Ad preview" className="w-20 h-20 object-cover rounded-lg border border-slate-700"/><button type="button" onClick={()=>setAdImageUrl('')} className="text-xs text-rose-300">Remove image</button></div>}
-                </div>
-                </div>
-                <textarea value={adText} onChange={e=>setAdText(e.target.value)} placeholder="Advertisement message" rows={2} className="w-full px-3 py-2 rounded-xl bg-slate-900 border border-slate-700 text-white text-xs"/>
-                <input value={adTargets} onChange={e=>setAdTargets(e.target.value)} placeholder="Target user names/device IDs (comma separated; blank = all users)" className="w-full px-3 py-2 rounded-xl bg-slate-900 border border-slate-700 text-white text-xs"/>
-                <button type="button" onClick={handleCreateAd} disabled={adBusy||!adTitle.trim()||!adText.trim()} className="px-4 py-2 rounded-xl bg-fuchsia-600 hover:bg-fuchsia-500 text-white text-xs font-bold disabled:opacity-50">{adBusy?'Saving...':'Create Advertisement'}</button>
-                <div className="space-y-2">{adsList.map(ad=><div key={ad.id} className="flex items-start justify-between gap-2 p-2 rounded-xl bg-slate-950 border border-slate-800"><div className="min-w-0"><b className="text-xs text-white">{ad.title}</b><p className="text-[11px] text-slate-300">{ad.text}</p>{ad.imageUrl&&<p className="text-[10px] text-slate-400 break-all">Image: {ad.imageUrl}</p>}{ad.linkUrl&&<p className="text-[10px] text-slate-400 break-all">Link: {ad.linkUrl}</p>}<p className="text-[10px] text-slate-500">Targets: {(ad.targetUsers||[]).join(', ')||'All users'} • {ad.active?'Active':'Inactive'}</p></div><button type="button" onClick={()=>handleDeleteAd(ad.id)} className="text-rose-300 p-1"><Trash2 className="w-4 h-4"/></button></div>)}</div>
-                <p className="text-[10px] text-slate-400">Recent ad events: {adEvents.length} (views/clicks tracked by ad ID)</p>
-              </div>
-
+              
               {/* Search & Filter Toolbar */}
               <div className="p-3.5 rounded-2xl bg-[#091526] border border-cyan-500/20 shadow-lg">
                 <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-2.5">
@@ -2355,6 +2339,30 @@ export const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({
           {/* ---------------------------------------------------- */}
           {/* TAB: AI TEACHER DIRECT CONTROL & COMMAND CHAT PANEL */}
           {/* ---------------------------------------------------- */}
+          {activeTab === 'ads' && (
+            <div className="space-y-5 max-w-5xl mx-auto animate-in fade-in">
+              <div className="flex items-center justify-between"><h2 className="text-xl sm:text-2xl font-black text-white">Advertisement Center</h2><p className="text-xs text-slate-400">Create, target and monitor ads</p></div>
+              <div className="p-4 rounded-2xl bg-[#091526] border border-fuchsia-500/30 space-y-3">
+                <h3 className="text-sm font-black text-fuchsia-200">Targeted Advertisement Manager</h3>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                  <input value={adTitle} onChange={e=>setAdTitle(e.target.value)} placeholder="Ad title" className="px-3 py-2 rounded-xl bg-slate-900 border border-slate-700 text-white text-xs"/>
+                  <input value={adLink} onChange={e=>setAdLink(e.target.value)} placeholder="Optional link URL" className="px-3 py-2 rounded-xl bg-slate-900 border border-slate-700 text-white text-xs"/>
+                  <div className="flex flex-col gap-2 px-3 py-2 rounded-xl bg-slate-900 border border-slate-700">
+                  <label className="text-xs text-slate-300 font-semibold">Choose advertisement image from Gallery</label>
+                  <input type="file" accept="image/*" onChange={e=>{const file=e.target.files?.[0]; if(!file)return; if(file.size>4*1024*1024){alert('Image 4 MB se chhoti honi chahiye');e.target.value='';return;} const reader=new FileReader();reader.onload=()=>setAdImageUrl(String(reader.result||''));reader.readAsDataURL(file);}} className="text-xs text-slate-300 file:mr-2 file:px-3 file:py-1.5 file:rounded-lg file:border-0 file:bg-fuchsia-600 file:text-white file:font-bold"/>
+                  {adImageUrl&&<div className="flex items-center gap-2"><img src={adImageUrl} alt="Ad preview" className="w-20 h-20 object-cover rounded-lg border border-slate-700"/><button type="button" onClick={()=>setAdImageUrl('')} className="text-xs text-rose-300">Remove image</button></div>}
+                </div>
+                </div>
+                <textarea value={adText} onChange={e=>setAdText(e.target.value)} placeholder="Advertisement message" rows={2} className="w-full px-3 py-2 rounded-xl bg-slate-900 border border-slate-700 text-white text-xs"/>
+                <input value={adTargets} onChange={e=>setAdTargets(e.target.value)} placeholder="Target user names/device IDs (comma separated; blank = all users)" className="w-full px-3 py-2 rounded-xl bg-slate-900 border border-slate-700 text-white text-xs"/>
+                <button type="button" onClick={handleCreateAd} disabled={adBusy||!adTitle.trim()||!adText.trim()} className="px-4 py-2 rounded-xl bg-fuchsia-600 hover:bg-fuchsia-500 text-white text-xs font-bold disabled:opacity-50">{adBusy?'Saving...':'Create Advertisement'}</button>
+                <div className="space-y-2">{adsList.map(ad=><div key={ad.id} className="flex items-start justify-between gap-2 p-2 rounded-xl bg-slate-950 border border-slate-800"><div className="min-w-0"><b className="text-xs text-white">{ad.title}</b><p className="text-[11px] text-slate-300">{ad.text}</p>{ad.imageUrl&&<p className="text-[10px] text-slate-400 break-all">Image: {ad.imageUrl}</p>}{ad.linkUrl&&<p className="text-[10px] text-slate-400 break-all">Link: {ad.linkUrl}</p>}<p className="text-[10px] text-slate-500">Targets: {(ad.targetUsers||[]).join(', ')||'All users'} • {ad.active?'Active':'Inactive'}</p></div><button type="button" onClick={()=>handleDeleteAd(ad.id)} className="text-rose-300 p-1"><Trash2 className="w-4 h-4"/></button></div>)}</div>
+                <p className="text-[10px] text-slate-400">Recent ad events: {adEvents.length} (views/clicks tracked by ad ID)</p>
+              </div>
+
+            </div>
+          )}
+
           {activeTab === 'aicontrol' && (
             <div className="space-y-5 max-w-5xl mx-auto animate-in fade-in">
               <div className="flex items-center justify-between gap-3">
