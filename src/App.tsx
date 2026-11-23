@@ -796,9 +796,7 @@ export default function App() {
 
       if (sessionRef.current) {
         sessionRef.current.updateProfile(displayName, newGrade, roleToUse, languageToUse, adminPassword);
-        if (updatedStudents.length > 1) {
-          sessionRef.current.sendText(`MULTI-STUDENT PROFILE UPDATE: This device has ${updatedStudents.length} students: ${updatedStudents.map((s, i) => `${i + 1}. ${s.name} (${s.grade || 'grade not specified'})`).join('; ')}. Teach and address every student by name. Do not treat the combined profile name as one person. Keep explanations age/grade-appropriate for each student, ask who is answering when needed, and track each student's learning separately as much as the current session supports. The existing students list is authoritative.`);
-        }
+        sessionRef.current.sendText(`[SYSTEM_NOTIFICATION - MANUAL PROFILE UPDATE]: The user manually saved the student profile. Previous profile name: ${oldName || 'not set'}. Current profile students (authoritative): ${updatedStudents.length ? updatedStudents.map((s, i) => `${i + 1}. ${s.name} (Class/Grade: ${s.grade || 'not specified'}, Position: ${s.role || 'Standard'})`).join('; ') : 'No student name set'}. Current profile grade: ${newGrade}. Position: ${roleToUse}. Preferred language: ${languageToUse}. Immediately acknowledge the update warmly using your EXISTING AI Teacher voice, address the newly saved student(s) by their correct name(s), and from now on use this profile for greetings, teaching, grade-appropriate explanations, and personalization. If multiple students are listed, treat them as separate students and do not treat the combined display name as one person. Do not use any other voice or assistant.`);
       }
     } catch (err) {
       console.error('Failed to save profile:', err);
