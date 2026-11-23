@@ -209,7 +209,7 @@ export default function App() {
       const config=data?.config;
       if(config) {
         const normalized={enabled:Boolean(config.enabled),title:String(config.title||''),videoUrl:String(config.videoUrl||''),linkUrl:String(config.linkUrl||''),skipAfterSeconds:Math.max(0,Math.min(60,Number(config.skipAfterSeconds)||0))};
-        setWelcomeVideoAdConfig(normalized);setWelcomeVideoAdCountdown(normalized.skipAfterSeconds);setShowWelcomeVideoAd(false); // Temporarily bypass welcome video ads to prevent startup black screen.
+        setWelcomeVideoAdConfig(normalized);setWelcomeVideoAdCountdown(normalized.skipAfterSeconds);
       }
     }).catch(()=>{}).finally(()=>setWelcomeVideoAdReady(true));
   }, []);
@@ -1182,6 +1182,12 @@ LOOK AT THE LIVE CAMERA FRAME IMAGE RIGHT NOW WITH YOUR VISION:
 
   // Keep welcome screen visible until the user explicitly starts; never leave a blank app screen.
   const handleWelcomeStartWithMic = async () => {
+    if (welcomeVideoAdConfig.enabled && welcomeVideoAdConfig.videoUrl) {
+      setShowWelcomeModal(false);
+      setWelcomeVideoAdCountdown(welcomeVideoAdConfig.skipAfterSeconds);
+      setShowWelcomeVideoAd(true);
+      return;
+    }
     setShowWelcomeModal(false);
     requestMicPermission().catch(() => {});
     startSession().catch(() => {});
