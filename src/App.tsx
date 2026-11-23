@@ -201,6 +201,7 @@ export default function App() {
   const [welcomeVideoAdReady, setWelcomeVideoAdReady] = useState(false);
   const [showWelcomeVideoAd, setShowWelcomeVideoAd] = useState(false);
   const [welcomeVideoAdMuted, setWelcomeVideoAdMuted] = useState(true);
+  const [welcomeVideoAdLoaded, setWelcomeVideoAdLoaded] = useState(false);
   const welcomeVideoAdRef = useRef<HTMLVideoElement | null>(null);
   const [welcomeVideoAdCountdown, setWelcomeVideoAdCountdown] = useState(5);
   useEffect(() => {
@@ -213,6 +214,7 @@ export default function App() {
     }).catch(()=>{}).finally(()=>setWelcomeVideoAdReady(true));
   }, []);
   useEffect(() => { if(!showWelcomeVideoAd||welcomeVideoAdCountdown<=0)return;const timer=window.setTimeout(()=>setWelcomeVideoAdCountdown(v=>Math.max(0,v-1)),1000);return()=>window.clearTimeout(timer); },[showWelcomeVideoAd,welcomeVideoAdCountdown]);
+  useEffect(() => { if(!showWelcomeVideoAd)return;const timer=window.setTimeout(()=>{if(!welcomeVideoAdLoaded)setShowWelcomeVideoAd(false);},7000);return()=>window.clearTimeout(timer);},[showWelcomeVideoAd,welcomeVideoAdLoaded]);
   const [showWelcomeModal, setShowWelcomeModal] = useState<boolean>(true);
   const [welcomeCountdown, setWelcomeCountdown] = useState<number>(5);
   const [typedTitleText, setTypedTitleText] = useState<string>('');
@@ -2020,9 +2022,10 @@ LOOK AT THE LIVE CAMERA FRAME IMAGE RIGHT NOW WITH YOUR VISION:
               src={welcomeVideoAdConfig.videoUrl}
               autoPlay
               muted={welcomeVideoAdMuted}
+              onLoadedData={() => setWelcomeVideoAdLoaded(true)}
               playsInline
               loop
-              onError={() => { setShowWelcomeVideoAd(false); setWelcomeVideoAdCountdown(0); }}
+              onError={() => { setWelcomeVideoAdLoaded(false); setShowWelcomeVideoAd(false); setWelcomeVideoAdCountdown(0); }}
               onClick={() => { if (welcomeVideoAdConfig.linkUrl) window.open(welcomeVideoAdConfig.linkUrl, '_blank', 'noopener,noreferrer'); }}
               className="w-full h-full object-contain bg-black cursor-pointer"
             />
