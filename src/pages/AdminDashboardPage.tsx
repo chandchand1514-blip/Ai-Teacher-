@@ -111,7 +111,7 @@ export const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({
   onSaveExamResult
 }) => {
   // Authentication & Security State
-  const [isUnlocked, setIsUnlocked] = useState<boolean>(false);
+  const [isUnlocked, setIsUnlocked] = useState<boolean>(true);
   const [unlockPasscode, setUnlockPasscode] = useState('');
   const [unlockError, setUnlockError] = useState('');
   const [unlockBusy, setUnlockBusy] = useState(false);
@@ -1072,8 +1072,7 @@ export const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({
   const isExamDue = daysPassed >= 6.5;
   const [examDueWarning, setExamDueWarning] = useState<string>('');
 
-  // Synchronize initial verification prop
-  useEffect(() => { setIsUnlocked(false); }, [initialVerified]);
+  // Admin panel opens directly without a passcode prompt.
 
   // Questions generator for selected grade
   const booksForGrade = CLASS_TEXTBOOKS.filter(b => b.grade === selectedGrade);
@@ -2349,7 +2348,7 @@ export const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({
                   <input value={adLink} onChange={e=>setAdLink(e.target.value)} placeholder="Optional link URL" className="px-3 py-2 rounded-xl bg-slate-900 border border-slate-700 text-white text-xs"/>
                   <div className="flex flex-col gap-2 px-3 py-2 rounded-xl bg-slate-900 border border-slate-700">
                   <label className="text-xs text-slate-300 font-semibold">Choose advertisement image from Gallery</label>
-                  <input type="file" accept="image/*" onChange={e=>{const file=e.target.files?.[0]; if(!file)return; if(file.size>4*1024*1024){alert('Image 4 MB se chhoti honi chahiye');e.target.value='';return;} const reader=new FileReader();reader.onload=()=>{const img=new Image();img.onload=()=>{const canvas=document.createElement('canvas');const max=1200;const scale=Math.min(1,max/Math.max(img.width,img.height));canvas.width=Math.round(img.width*scale);canvas.height=Math.round(img.height*scale);const ctx=canvas.getContext('2d');if(!ctx){setAdImageUrl(String(reader.result||''));return;}ctx.drawImage(img,0,0,canvas.width,canvas.height);setAdImageUrl(canvas.toDataURL('image/jpeg',0.78));};img.onerror=()=>setAdImageUrl(String(reader.result||''));img.src=String(reader.result||'');};reader.readAsDataURL(file);}} className="text-xs text-slate-300 file:mr-2 file:px-3 file:py-1.5 file:rounded-lg file:border-0 file:bg-fuchsia-600 file:text-white file:font-bold"/>
+                  <input type="file" accept="image/*" onChange={e=>{const file=e.target.files?.[0]; if(!file)return; if(file.size>4*1024*1024){alert('Image 4 MB se chhoti honi chahiye');e.target.value='';return;} const reader=new FileReader();reader.onload=()=>{const img=new Image();img.onload=()=>{const canvas=document.createElement('canvas');const max=700;const scale=Math.min(1,max/Math.max(img.width,img.height));canvas.width=Math.round(img.width*scale);canvas.height=Math.round(img.height*scale);const ctx=canvas.getContext('2d');if(!ctx){setAdImageUrl(String(reader.result||''));return;}ctx.drawImage(img,0,0,canvas.width,canvas.height);setAdImageUrl(canvas.toDataURL('image/jpeg',0.62));};img.onerror=()=>setAdImageUrl(String(reader.result||''));img.src=String(reader.result||'');};reader.readAsDataURL(file);}} className="text-xs text-slate-300 file:mr-2 file:px-3 file:py-1.5 file:rounded-lg file:border-0 file:bg-fuchsia-600 file:text-white file:font-bold"/>
                   {adImageUrl&&<div className="flex items-center gap-2"><img src={adImageUrl} alt="Ad preview" className="w-20 h-20 object-cover rounded-lg border border-slate-700"/><button type="button" onClick={()=>setAdImageUrl('')} className="text-xs text-rose-300">Remove image</button></div>}
                 </div>
                 </div>
