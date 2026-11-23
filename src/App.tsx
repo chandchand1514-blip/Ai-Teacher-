@@ -796,6 +796,9 @@ export default function App() {
 
       if (sessionRef.current) {
         sessionRef.current.updateProfile(displayName, newGrade, roleToUse, languageToUse, adminPassword);
+        if (updatedStudents.length > 1) {
+          sessionRef.current.sendText(`MULTI-STUDENT PROFILE UPDATE: This device has ${updatedStudents.length} students: ${updatedStudents.map((s, i) => `${i + 1}. ${s.name} (${s.grade || 'grade not specified'})`).join('; ')}. Teach and address every student by name. Do not treat the combined profile name as one person. Keep explanations age/grade-appropriate for each student, ask who is answering when needed, and track each student's learning separately as much as the current session supports. The existing students list is authoritative.`);
+        }
       }
     } catch (err) {
       console.error('Failed to save profile:', err);
