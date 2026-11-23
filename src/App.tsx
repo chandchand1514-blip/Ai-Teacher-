@@ -1966,16 +1966,6 @@ LOOK AT THE LIVE CAMERA FRAME IMAGE RIGHT NOW WITH YOUR VISION:
 
   return (
     <div className="h-full h-[100dvh] w-full fixed inset-0 bg-[#030611] text-slate-100 flex flex-col items-center justify-between p-3 sm:p-5 select-none overflow-hidden font-sans touch-none">
-      {targetedAds.length > 0 && (
-        <div className="fixed top-3 left-3 right-3 z-[80] max-w-xl mx-auto space-y-2 pointer-events-auto">
-          {targetedAds.map(ad => (
-            <div key={ad.id} className="rounded-2xl bg-slate-900 border border-amber-400/50 shadow-xl p-3 text-left">
-              <div className="flex items-start justify-between gap-2"><div><span className="text-[10px] uppercase font-black text-amber-300">Advertisement</span><h3 className="text-sm font-bold text-white">{ad.title}</h3><p className="text-xs text-slate-200 mt-1">{ad.text}</p></div><button onClick={()=>setTargetedAds(prev=>prev.filter(x=>x.id!==ad.id))} className="text-slate-400 p-1">✕</button></div>
-              {ad.imageUrl && ad.linkUrl ? <a href={ad.linkUrl} target="_blank" rel="noopener noreferrer" onClick={()=>trackTargetedAd(ad.id,'click')} className="block mt-2 overflow-hidden rounded-xl"><img src={ad.imageUrl} alt={ad.title||'Advertisement'} className="w-full max-h-64 object-contain rounded-xl cursor-pointer"/></a> : ad.imageUrl ? <img src={ad.imageUrl} alt={ad.title||'Advertisement'} className="mt-2 w-full max-h-64 object-contain rounded-xl"/> : null}{ad.linkUrl && !ad.imageUrl && <a href={ad.linkUrl} target="_blank" rel="noopener noreferrer" onClick={()=>trackTargetedAd(ad.id,'click')} className="inline-block mt-2 px-3 py-1.5 rounded-lg bg-amber-400 text-slate-950 text-xs font-bold">Learn More</a>}
-            </div>
-          ))}
-        </div>
-      )}
       {/* Welcome Screen on App Open (Full Page) */}
       {showWelcomeModal && (
         <div className="fixed inset-0 z-50 flex flex-col items-center justify-center p-6 bg-[#030611] animate-in fade-in duration-300">
@@ -2217,6 +2207,17 @@ LOOK AT THE LIVE CAMERA FRAME IMAGE RIGHT NOW WITH YOUR VISION:
       <footer className="w-full max-w-sm sm:max-w-md z-20 pb-2 sm:pb-4 flex flex-col items-center gap-3">
         {!isLiveActive ? (
           <div className="flex flex-col items-center gap-2.5 w-full">
+            {targetedAds.length > 0 && (
+              <div className="w-full max-w-sm rounded-xl border border-amber-400/40 bg-slate-900/90 p-2 shadow-lg text-left">
+                {targetedAds.map(ad => (
+                  <div key={ad.id} className="flex items-center gap-2.5">
+                    {ad.imageUrl && <a href={ad.linkUrl || undefined} target={ad.linkUrl ? "_blank" : undefined} rel="noopener noreferrer" onClick={()=>ad.linkUrl&&trackTargetedAd(ad.id,'click')} className="shrink-0"><img src={ad.imageUrl} alt={ad.title||'Advertisement'} className="w-16 h-14 rounded-lg object-cover bg-slate-800" onError={(e)=>{(e.currentTarget as HTMLImageElement).style.display='none';}} /></a>}
+                    <div className="min-w-0 flex-1"><span className="text-[9px] uppercase font-black text-amber-300">Advertisement</span><h3 className="text-xs font-bold text-white truncate">{ad.title}</h3><p className="text-[10px] text-slate-200 line-clamp-2">{ad.text}</p>{ad.linkUrl && !ad.imageUrl && <a href={ad.linkUrl} target="_blank" rel="noopener noreferrer" onClick={()=>trackTargetedAd(ad.id,'click')} className="text-[10px] text-amber-300 underline">Open Link</a>}</div>
+                    <button onClick={()=>setTargetedAds(prev=>prev.filter(x=>x.id!==ad.id))} className="text-slate-400 p-1 text-xs">✕</button>
+                  </div>
+                ))}
+              </div>
+            )}
             {(status === 'error' || isMicDenied) && (
               <a
                 href={typeof window !== 'undefined' ? window.location.origin : '/'}
