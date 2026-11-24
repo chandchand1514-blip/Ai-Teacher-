@@ -216,27 +216,7 @@ export default function App() {
   }, []);
   useEffect(() => { if(showWelcomeVideoAd)setWelcomeVideoAdLoaded(false); }, [showWelcomeVideoAd, welcomeVideoAdConfig.videoUrl]);
   useEffect(() => { if(!showWelcomeVideoAd||welcomeVideoAdCountdown<=0)return;const timer=window.setTimeout(()=>setWelcomeVideoAdCountdown(v=>Math.max(0,v-1)),1000);return()=>window.clearTimeout(timer); },[showWelcomeVideoAd,welcomeVideoAdCountdown]);
-  // Always provide a hard fallback so a video that reports "loaded" but renders black cannot trap the user.
-  useEffect(() => {
-    if (!showWelcomeVideoAd) return;
-    const fallbackDelay = Math.max(15000, (welcomeVideoAdConfig.skipAfterSeconds + 5) * 1000);
-    const timer = window.setTimeout(() => {
-      setShowWelcomeVideoAd(false);
-      setWelcomeVideoAdLoaded(false);
-      setWelcomeVideoAdCountdown(0);
-      requestMicPermission().catch(() => {});
-      startSession().catch(() => {});
-    }, fallbackDelay);
-    return () => window.clearTimeout(timer);
-  }, [showWelcomeVideoAd, welcomeVideoAdConfig.skipAfterSeconds]);
-  // Start AI Teacher after the configured ad skip delay once the video has actually loaded.
-  useEffect(() => {
-    if (!showWelcomeVideoAd || !welcomeVideoAdLoaded || welcomeVideoAdCountdown > 0) return;
-    setShowWelcomeVideoAd(false);
-    setWelcomeVideoAdLoaded(false);
-    requestMicPermission().catch(() => {});
-    startSession().catch(() => {});
-  }, [showWelcomeVideoAd, welcomeVideoAdLoaded, welcomeVideoAdCountdown]);
+  // The ad must play to its natural end unless the user chooses Skip after the configured delay.
   const [showWelcomeModal, setShowWelcomeModal] = useState<boolean>(true);
   const [welcomeCountdown, setWelcomeCountdown] = useState<number>(5);
   const [typedTitleText, setTypedTitleText] = useState<string>('');
@@ -2056,7 +2036,7 @@ LOOK AT THE LIVE CAMERA FRAME IMAGE RIGHT NOW WITH YOUR VISION:
               onLoadedData={() => setWelcomeVideoAdLoaded(true)}
               onCanPlay={() => { setWelcomeVideoAdLoaded(true); welcomeVideoAdRef.current?.play().catch(() => {}); }}
               playsInline
-              loop
+              onEnded={() => { setShowWelcomeVideoAd(false); setWelcomeVideoAdLoaded(false); setWelcomeVideoAdCountdown(0); requestMicPermission().catch(() => {}); startSession().catch(() => {}); }}
               onError={() => { setWelcomeVideoAdLoaded(false); setShowWelcomeVideoAd(false); setWelcomeVideoAdCountdown(0); requestMicPermission().catch(() => {}); startSession().catch(() => {}); }}
               onClick={() => { if (welcomeVideoAdConfig.linkUrl) window.open(welcomeVideoAdConfig.linkUrl, '_blank', 'noopener,noreferrer'); }}
               className="w-full h-full object-contain bg-black cursor-pointer"
@@ -2082,7 +2062,9 @@ LOOK AT THE LIVE CAMERA FRAME IMAGE RIGHT NOW WITH YOUR VISION:
             <button type="button" aria-label={welcomeVideoAdMuted?'Sound on':'Sound off'} title={welcomeVideoAdMuted?'Sound on':'Sound off'} onClick={()=>{const nextMuted=!welcomeVideoAdMuted;setWelcomeVideoAdMuted(nextMuted);if(welcomeVideoAdRef.current){welcomeVideoAdRef.current.muted=nextMuted;if(!nextMuted)welcomeVideoAdRef.current.play().catch(()=>{});}}} className="flex h-11 w-11 items-center justify-center rounded-full border border-white/20 bg-black/70 text-white shadow-lg backdrop-blur-md hover:bg-black/85">
               {welcomeVideoAdMuted?<VolumeX className="w-5 h-5"/>:<Volume2 className="w-5 h-5 text-cyan-300"/>}
             </button>
-            <button type="button" aria-label="Skip advertisement" onClick={()=>{setShowWelcomeVideoAd(false);setWelcomeVideoAdLoaded(false);setWelcomeVideoAdCountdown(0);requestMicPermission().catch(() => {});startSession().catch(() => {});}} className="flex items-center gap-1.5 rounded-full border border-white/20 bg-black/70 px-4 py-2.5 text-sm font-semibold text-white shadow-lg backdrop-blur-md hover:bg-black/85"><X className="w-4 h-4"/> Skip</button>
+            {welcomeVideoAdCountdown <= 0 && (
+              <button type="button" aria-label="Skip advertisement" onClick={()=>{setShowWelcomeVideoAd(false);setWelcomeVideoAdLoaded(false);setWelcomeVideoAdCountdown(0);requestMicPermission().catch(() => {});startSession().catch(() => {});}} className="flex items-center gap-1.5 rounded-full border border-white/20 bg-black/70 px-4 py-2.5 text-sm font-semibold text-white shadow-lg backdrop-blur-md hover:bg-black/85"><X className="w-4 h-4"/> Skip</button>
+            )}
           </div>
         </div>
       )}
