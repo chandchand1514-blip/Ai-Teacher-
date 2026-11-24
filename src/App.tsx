@@ -2132,7 +2132,7 @@ LOOK AT THE LIVE CAMERA FRAME IMAGE RIGHT NOW WITH YOUR VISION:
                 Enter AI Teacher
               </button>
               <p className="mt-1 max-w-xs px-2 text-center text-[10px] leading-relaxed text-slate-400">
-                Your questions and answers may be recorded by AI to improve learning.
+                Your study questions, AI replies, and shared study photos may be saved to improve learning and reviewed by authorized administrators.
               </p>
             </div>
           </div>
