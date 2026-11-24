@@ -1163,12 +1163,15 @@ app.get('/api/admin/users', (req, res) => {
       if (key === 'default_device' && !rawProf.name && (!rawProf.visitCount || rawProf.visitCount === 0)) continue;
 
       // Extract real student name if already known:
-      const rawName = (
-        rawProf.name || 
-        rawProf.lastQuestionStudent || 
+      const rawNameCandidate = String(
+        rawProf.name ||
+        rawProf.lastQuestionStudent ||
         (rawProf.students && rawProf.students[0]?.name) ||
         ''
       ).trim();
+      // Browser/device user-agent strings are technical metadata, never student names.
+      const looksLikeUserAgent = /Mozilla\/|AppleWebKit\/|Chrome\/|Safari\/|HeadlessChrome\//i.test(rawNameCandidate);
+      const rawName = looksLikeUserAgent ? '' : rawNameCandidate;
 
       const hasRealName = Boolean(rawName && rawName.length > 0 && !rawName.toLowerCase().includes('test_dev') && rawName.toLowerCase() !== 'default_device');
       const cleanName = rawName.toLowerCase().trim();
@@ -1199,10 +1202,12 @@ app.get('/api/admin/users', (req, res) => {
       const weeklyQuestions = rawProf.weeklyQuestionsTaught || existing?.weeklyQuestions || [];
       const questionsCount = askedQuestions.length + weeklyQuestions.length;
 
-      const deviceModel = rawProf.deviceType || (rawProf.userAgent ? (
-        /iPhone|iPad/i.test(rawProf.userAgent) ? 'Apple iOS' :
-        /Android/i.test(rawProf.userAgent) ? 'Android Mobile' : 'Web Browser'
-      ) : (key.startsWith('dev_') ? 'Mobile Device' : 'Web Client'));
+      const deviceTypeLooksLikeUA = /Mozilla\/|AppleWebKit\/|Chrome\/|Safari\/|HeadlessChrome\//i.test(String(rawProf.deviceType || ''));
+      const detectedDeviceLabel = /iPhone|iPad/i.test(String(rawProf.userAgent || rawProf.deviceType || '')) ? 'Apple iOS'
+        : /Android/i.test(String(rawProf.userAgent || rawProf.deviceType || '')) ? 'Android Mobile'
+        : /Mobile/i.test(String(rawProf.userAgent || rawProf.deviceType || '')) ? 'Mobile Device'
+        : 'Desktop Browser';
+      const deviceModel = (!rawProf.deviceType || deviceTypeLooksLikeUA) ? detectedDeviceLabel : rawProf.deviceType;
 
       let avgScore: number | null = null;
       let lastScore: number | null = null;
