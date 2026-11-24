@@ -50,6 +50,8 @@ export interface UserRecord {
   questionsCount: number;
   askedQuestions?: string[];
   weeklyQuestions?: Array<{ question: string; topic: string; date: string }>;
+  chatHistory?: Array<{ role: 'user' | 'assistant'; text: string; timestamp?: number }>;
+  sharedImages?: Array<{ id: string; timestamp?: string; purpose?: string; image?: string; question?: string; answer?: string; feedback?: string }>;
   totalExams: number;
   lastExamDate: string | null;
   lastExamScore: number | null;
@@ -3903,6 +3905,46 @@ export const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({
                 </div>
               </div>
             )}
+
+            <details className="rounded-xl border border-sky-500/30 bg-[#081a2c] p-3">
+              <summary className="cursor-pointer list-none flex items-center justify-between gap-2 text-xs font-bold uppercase tracking-wide text-sky-300">
+                Photos shared with AI Teacher
+                <span className="text-[10px] normal-case text-slate-400">{selectedUserForModal.sharedImages?.length || 0} saved</span>
+              </summary>
+              <div className="mt-3 space-y-3">
+                {!selectedUserForModal.sharedImages?.length ? (
+                  <p className="text-xs text-slate-400">No saved photo records for this user. Only photos captured and saved by the app's existing notes/focus features appear here.</p>
+                ) : selectedUserForModal.sharedImages.map((photo) => (
+                  <div key={photo.id} className="rounded-lg border border-slate-700 bg-slate-900 p-2 space-y-2">
+                    {photo.image && <img src={photo.image} alt="Photo shared with AI Teacher" className="max-h-56 w-full rounded-lg object-contain bg-black" />}
+                    <p className="text-[10px] text-slate-400">{photo.timestamp ? new Date(photo.timestamp).toLocaleString() : 'Time not recorded'} · {photo.purpose === 'notes_check' ? 'Notes photo' : photo.purpose === 'focus_proctoring' ? 'Focus photo' : 'Saved photo'}</p>
+                    {photo.question && <p className="text-xs text-slate-200"><strong>Question:</strong> {photo.question}</p>}
+                    {photo.answer && <p className="text-xs text-slate-200"><strong>AI response:</strong> {photo.answer}</p>}
+                    {photo.feedback && <p className="text-xs text-slate-300">{photo.feedback}</p>}
+                  </div>
+                ))}
+              </div>
+            </details>
+
+            <details className="rounded-xl border border-indigo-500/30 bg-[#10152e] p-3">
+              <summary className="cursor-pointer list-none flex items-center justify-between gap-2 text-xs font-bold uppercase tracking-wide text-indigo-300">
+                Full conversation with AI Teacher
+                <span className="text-[10px] normal-case text-slate-400">{selectedUserForModal.chatHistory?.length || 0} saved messages</span>
+              </summary>
+              <div className="mt-3 max-h-80 overflow-y-auto space-y-2">
+                {!selectedUserForModal.chatHistory?.length ? (
+                  <p className="text-xs text-slate-400">No saved conversation history available for this user yet.</p>
+                ) : selectedUserForModal.chatHistory.map((message, idx) => (
+                  <div key={idx} className={message.role === 'user' ? 'rounded-lg border border-cyan-500/20 bg-cyan-950/30 p-2' : 'rounded-lg border border-emerald-500/20 bg-emerald-950/20 p-2'}>
+                    <div className="mb-1 flex justify-between gap-2 text-[10px] text-slate-400">
+                      <strong>{message.role === 'user' ? 'Student' : 'AI Teacher'}</strong>
+                      <span>{message.timestamp ? new Date(message.timestamp).toLocaleString() : ''}</span>
+                    </div>
+                    <p className="whitespace-pre-wrap break-words text-xs text-slate-200">{message.text}</p>
+                  </div>
+                ))}
+              </div>
+            </details>
 
             {selectedUserForModal.weeklyQuestions && selectedUserForModal.weeklyQuestions.length > 0 && (
               <div className="space-y-2">
