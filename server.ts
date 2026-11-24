@@ -2784,6 +2784,37 @@ app.put('/api/admin/welcome-video-ad',async (req,res)=>{
     saveWelcomeVideoAd(config);if(cloudStorageEnabled)await saveWelcomeVideoAdCloud(config);res.json({success:true,config});
   }catch(err:any){res.status(500).json({success:false,error:err.message});}
 });
+app.delete('/api/admin/welcome-video-ad',async (_req,res)=>{
+  try {
+    const current=(await loadWelcomeVideoAdCloud())||readWelcomeVideoAd();
+    const videoUrl=String(current.videoUrl||'');
+    if(cloudStorageEnabled) {
+      const configDelete=await fetch(`${SUPABASE_URL}/storage/v1/object/${WELCOME_AD_BUCKET}/welcome-video-ad-config.json`,{
+        method:'DELETE',
+        headers:{apikey:SUPABASE_SERVICE_ROLE_KEY,Authorization:'Bearer '+SUPABASE_SERVICE_ROLE_KEY}
+      });
+      if(!configDelete.ok && configDelete.status!==404) throw new Error('Cloud config delete failed ('+configDelete.status+')');
+      if(/^https?:\/\//i.test(videoUrl)) {
+        const pathname=new URL(videoUrl).pathname;
+        const objectName=decodeURIComponent(pathname.split('/').pop()||'');
+        if(objectName.startsWith('welcome-ad-video.')) {
+          const videoDelete=await fetch(`${SUPABASE_URL}/storage/v1/object/${WELCOME_AD_BUCKET}/${objectName}`,{
+            method:'DELETE',
+            headers:{apikey:SUPABASE_SERVICE_ROLE_KEY,Authorization:'Bearer '+SUPABASE_SERVICE_ROLE_KEY}
+          });
+          if(!videoDelete.ok && videoDelete.status!==404) throw new Error('Cloud video delete failed ('+videoDelete.status+')');
+        }
+      }
+    }
+    for(const name of fs.readdirSync(DATA_DIR).filter(n=>/^welcome_ad_video\./.test(n))) {
+      try { fs.unlinkSync(path.join(DATA_DIR,name)); } catch (_) {}
+    }
+    const cleared={enabled:false,title:'',videoUrl:'',linkUrl:'',skipAfterSeconds:5,updatedAt:new Date().toISOString()};
+    saveWelcomeVideoAd(cleared);
+    if(cloudStorageEnabled) await saveWelcomeVideoAdCloud(cleared);
+    res.json({success:true,config:cleared});
+  } catch(err:any) { res.status(500).json({success:false,error:err.message}); }
+});
 
 // Persistent targeted advertisements (Admin-only management)
 const ADS_FILE = path.join(DATA_DIR, 'targeted_ads.json');
