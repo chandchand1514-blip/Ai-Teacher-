@@ -3873,7 +3873,7 @@ export const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({
                   Mastered Topics ({selectedUserForModal.learnedTopics.length})
                 </h4>
                 <div className="flex flex-wrap gap-1.5 ">
-                  {selectedUserForModal.learnedTopics.slice(0,6).map((top, idx) => (
+                  {selectedUserForModal.learnedTopics.map((top, idx) => (
                     <span key={idx} className="text-[10px] px-1.5 py-0.5 rounded-lg bg-cyan-950/80 border border-cyan-500/30 text-cyan-200 font-medium">
                       {top}
                     </span>
@@ -3888,7 +3888,7 @@ export const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({
                   Recent Questions
                 </h4>
                 <div className="space-y-1.5 ">
-                  {selectedUserForModal.askedQuestions.slice(0,3).map((q, idx) => (
+                  {selectedUserForModal.askedQuestions.map((q, idx) => (
                     <div key={idx} className="p-1.5 rounded-lg bg-slate-900 border border-slate-800 text-[10px] text-slate-200">
                       {q}
                     </div>
@@ -3977,7 +3977,7 @@ export const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({
                   Weekly Questions
                 </h4>
                 <div className="space-y-1.5 max-h-36 overflow-y-auto">
-                  {selectedUserForModal.weeklyQuestions.slice(0,3).map((wq, idx) => (
+                  {selectedUserForModal.weeklyQuestions.map((wq, idx) => (
                     <div key={idx} className="p-2.5 rounded-xl bg-slate-900 border border-slate-800 text-xs text-slate-200 flex items-center justify-between">
                       <span>{wq.question}</span>
                       <span className="text-[10px] text-slate-400 font-mono">{wq.date}</span>
