@@ -1312,9 +1312,10 @@ app.put('/api/admin/users/:id/ad-preferences', (req,res) => {
     const existing=loadServerProfile(userKey);
     const adsEnabled=req.body?.adsEnabled !== false;
     const allowedAdIds=Array.isArray(req.body?.allowedAdIds) ? [...new Set(req.body.allowedAdIds.map((v:any)=>String(v).slice(0,100)))].slice(0,100) : [];
-    const updated={...existing,adsEnabled,allowedAdIds,updatedAt:new Date().toISOString()};
+    const welcomeVideoAdEnabled=req.body?.welcomeVideoAdEnabled !== false;
+    const updated={...existing,adsEnabled,allowedAdIds,welcomeVideoAdEnabled,updatedAt:new Date().toISOString()};
     saveServerProfile(updated,userKey,{bypassDeletedCheck:true});
-    res.json({success:true,adsEnabled,allowedAdIds});
+    res.json({success:true,adsEnabled,allowedAdIds,welcomeVideoAdEnabled});
   } catch(err:any) { res.status(500).json({success:false,error:err.message}); }
 });
 
@@ -2841,7 +2842,15 @@ async function loadWelcomeVideoAdCloud(): Promise<any|null> {
     return config && typeof config === 'object' ? config : null;
   } catch (_) { return null; }
 }
-app.get('/api/welcome-video-ad',async (req,res)=>res.json({success:true,config:(await loadWelcomeVideoAdCloud())||readWelcomeVideoAd()}));
+app.get('/api/welcome-video-ad',async (req,res)=>{
+  const config=(await loadWelcomeVideoAdCloud())||readWelcomeVideoAd();
+  const deviceId=String(req.query.deviceId||'').trim();
+  if(deviceId){
+    const studentProfile=loadServerProfile(deviceId);
+    if(studentProfile?.welcomeVideoAdEnabled===false) return res.json({success:true,config:{...config,enabled:false}});
+  }
+  res.json({success:true,config});
+});
 app.get('/api/admin/welcome-video-ad',async (req,res)=>res.json({success:true,config:(await loadWelcomeVideoAdCloud())||readWelcomeVideoAd()}));
 app.put('/api/admin/welcome-video-ad',async (req,res)=>{
   try {
