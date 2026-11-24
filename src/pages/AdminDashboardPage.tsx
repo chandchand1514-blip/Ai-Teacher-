@@ -3795,8 +3795,8 @@ export const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({
         <div className="fixed inset-0 z-50 flex items-start sm:items-center justify-center p-2 sm:p-4 bg-black/80 backdrop-blur-md animate-in fade-in select-none overflow-y-auto overscroll-contain">
           <div className="relative w-full max-w-sm max-h-[calc(100dvh-1rem)] sm:max-h-[90dvh] overflow-y-auto overscroll-contain touch-pan-y bg-[#0a1526] border border-cyan-500/40 rounded-xl p-3 shadow-2xl space-y-2">
             {/* Header */}
-            <div className="flex items-center justify-between border-b border-slate-800 pb-2">
-              <div className="flex items-center gap-2">
+            <div className="relative flex items-start gap-2 border-b border-slate-800 pb-2 pr-10 min-w-0">
+              <div className="flex items-center gap-2 min-w-0 flex-1">
                 <div className={`w-8 h-8 rounded-lg flex items-center justify-center font-black text-sm shadow-lg shrink-0 ${
                   selectedUserForModal.name.toLowerCase().includes('chand')
                     ? 'bg-gradient-to-tr from-amber-400 to-rose-500 text-slate-950 ring-2 ring-amber-400/50'
@@ -3804,11 +3804,8 @@ export const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({
                 }`}>
                   {selectedUserForModal.name.charAt(0).toUpperCase()}
                 </div>
-                <div className="flex items-center gap-2">
-                  <h3 className="text-sm font-black text-white">{selectedUserForModal.name}</h3>
-                  <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-cyan-950 border border-cyan-500/40 text-cyan-300">
-                    {selectedUserForModal.grade}
-                  </span>
+                <div className="flex items-center gap-2 min-w-0 flex-1">
+                  <h3 className="text-sm font-black text-white break-words min-w-0">{selectedUserForModal.hasRealName ? selectedUserForModal.name : 'Naya Chhatra'}</h3>
                   {selectedUserForModal.role.includes('Admin') && (
                     <span className="text-[9px] font-bold px-2 py-0.5 rounded bg-amber-950 text-amber-300 border border-amber-500/40">
                       Admin
@@ -3818,10 +3815,11 @@ export const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({
               </div>
               <button
                 type="button"
+                aria-label="Close user details"
                 onClick={() => setSelectedUserForModal(null)}
-                className="p-1 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 cursor-pointer"
+                className="absolute right-0 top-0 z-10 flex h-9 w-9 items-center justify-center rounded-full border border-rose-500/40 bg-rose-950/70 text-rose-300 hover:bg-rose-900 cursor-pointer shadow-lg"
               >
-                <X className="w-4 h-4" />
+                <X className="w-5 h-5" />
               </button>
             </div>
 
