@@ -218,7 +218,7 @@ export default function App() {
   const welcomeVideoAdRef = useRef<HTMLVideoElement | null>(null);
   const [welcomeVideoAdCountdown, setWelcomeVideoAdCountdown] = useState(5);
   useEffect(() => {
-    safeFetchJson('/api/welcome-video-ad').then(data => {
+    safeFetchJson('/api/welcome-video-ad?deviceId=' + encodeURIComponent(getDeviceId())).then(data => {
       const config=data?.config;
       if(config) {
         const normalized={enabled:Boolean(config.enabled),title:String(config.title||''),videoUrl:String(config.videoUrl||''),linkUrl:String(config.linkUrl||''),skipAfterSeconds:Math.max(0,Math.min(60,Number(config.skipAfterSeconds)||0))};
@@ -1199,7 +1199,7 @@ LOOK AT THE LIVE CAMERA FRAME IMAGE RIGHT NOW WITH YOUR VISION:
     let config = welcomeVideoAdConfig;
     if (!welcomeVideoAdReady) {
       try {
-        const data = await safeFetchJson('/api/welcome-video-ad');
+        const data = await safeFetchJson('/api/welcome-video-ad?deviceId=' + encodeURIComponent(getDeviceId()));
         const raw = data?.config;
         if (raw) {
           config = {
