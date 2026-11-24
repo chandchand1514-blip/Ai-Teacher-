@@ -1226,6 +1226,8 @@ app.get('/api/admin/users', (req, res) => {
         userAgent: String(rawProf.userAgent || ''),
         registeredAt: rawProf.registeredAt || null,
         lastActivityTimestamp: Number(rawProf.lastActivityTimestamp || 0),
+        adsEnabled: rawProf.adsEnabled !== false,
+        allowedAdIds: Array.isArray(rawProf.allowedAdIds) ? rawProf.allowedAdIds : [],
         grade,
         deviceId: key.startsWith('dev_') ? key : (rawProf.deviceId || key),
         visitCount: visits,
@@ -1284,6 +1286,19 @@ app.get('/api/admin/users', (req, res) => {
 
 
 // Upsert User / Student from Admin Panel
+app.put('/api/admin/users/:id/ad-preferences', (req,res) => {
+  try {
+    const userKey=String(req.params.id||'').trim();
+    if(!userKey) return res.status(400).json({success:false,error:'User ID missing'});
+    const existing=loadServerProfile(userKey);
+    const adsEnabled=req.body?.adsEnabled !== false;
+    const allowedAdIds=Array.isArray(req.body?.allowedAdIds) ? [...new Set(req.body.allowedAdIds.map((v:any)=>String(v).slice(0,100)))].slice(0,100) : [];
+    const updated={...existing,adsEnabled,allowedAdIds,updatedAt:new Date().toISOString()};
+    saveServerProfile(updated,userKey,{bypassDeletedCheck:true});
+    res.json({success:true,adsEnabled,allowedAdIds});
+  } catch(err:any) { res.status(500).json({success:false,error:err.message}); }
+});
+
 app.post('/api/admin/users/upsert', (req, res) => {
   try {
     const { name, grade, stars } = req.body;
@@ -2872,8 +2887,15 @@ app.put('/api/admin/ads/:id', (req,res) => {
 });
 app.delete('/api/admin/ads/:id', (req,res) => { try { const ads=readAds().filter(a=>a.id!==req.params.id); saveAds(ads); res.json({success:true,ads}); } catch(err:any){res.status(500).json({success:false,error:err.message});} });
 app.get('/api/targeted-ads', (req,res) => {
-  try { const name=String(req.query.studentName||'').trim().toLowerCase(), device=String(req.query.deviceId||'').trim().toLowerCase(); const ads=readAds().filter(a=>a.active && (!Array.isArray(a.targetUsers)||a.targetUsers.length===0||a.targetUsers.some((t:string)=>t.toLowerCase()===name||t.toLowerCase()===device))); res.json({success:true,ads}); }
-  catch(err:any){res.status(500).json({success:false,error:err.message});}
+  try {
+    const name=String(req.query.studentName||'').trim().toLowerCase();
+    const device=String(req.query.deviceId||'').trim();
+    const profile=device?loadServerProfile(device):{};
+    if(profile?.adsEnabled===false) return res.json({success:true,ads:[]});
+    const allowed=Array.isArray(profile?.allowedAdIds)?profile.allowedAdIds:[];
+    const ads=readAds().filter(a=>a.active && (allowed.length===0||allowed.includes(a.id)) && (!Array.isArray(a.targetUsers)||a.targetUsers.length===0||a.targetUsers.some((t:string)=>t.toLowerCase()===name||t.toLowerCase()===device.toLowerCase())));
+    res.json({success:true,ads});
+  } catch(err:any){res.status(500).json({success:false,error:err.message});}
 });
 app.post('/api/targeted-ads/:id/event', (req,res) => {
   try { const {studentName,deviceId,event='view'}=req.body||{}; const events=readAdEvents(); events.push({id:'evt_'+Date.now(),adId:req.params.id,studentName:String(studentName||'').slice(0,100),deviceId:String(deviceId||'').slice(0,150),event:String(event).slice(0,30),timestamp:new Date().toISOString()}); fs.writeFileSync(AD_EVENTS_FILE,JSON.stringify(events.slice(-5000),null,2),'utf-8'); res.json({success:true}); }
