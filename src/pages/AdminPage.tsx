@@ -16,7 +16,7 @@ export const AdminPage: React.FC<AdminPageProps> = ({
 
   const handleClose = () => {
     safeFetchJson('/api/admin/panel-closed', { method: 'POST' }).catch(() => {});
-    navigate('/');
+    navigate('/', { replace: true });
   };
 
   const handleSpeak = (text: string, voice?: string) => {
