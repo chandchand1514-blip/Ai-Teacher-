@@ -36,6 +36,9 @@ export interface UserRecord {
   grade: string;
   deviceId: string;
   deviceType?: string;
+  userAgent?: string;
+  registeredAt?: string;
+  lastActivityTimestamp?: number;
   hasRealName?: boolean;
   isNamePending?: boolean;
   visitCount: number;
@@ -3813,6 +3816,19 @@ export const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({
                 <strong className="text-emerald-300 text-sm font-mono">
                   {selectedUserForModal.averageExamScore !== null ? `${selectedUserForModal.averageExamScore}%` : '—'}
                 </strong>
+              </div>
+            </div>
+
+            <div className="space-y-2 rounded-xl border border-cyan-500/25 bg-[#09182d] p-3">
+              <h4 className="text-xs font-bold uppercase tracking-wide text-cyan-300">User & Device Details</h4>
+              <div className="grid grid-cols-1 gap-1.5 text-[11px] text-slate-200">
+                <p><span className="text-slate-400">User name:</span> <strong>{selectedUserForModal.hasRealName ? selectedUserForModal.name : 'Name not provided yet'}</strong></p>
+                <p><span className="text-slate-400">Status:</span> <strong className={selectedUserForModal.isLiveNow ? 'text-emerald-300' : 'text-slate-200'}>{selectedUserForModal.isLiveNow ? 'Online now' : 'Offline'}</strong></p>
+                <p><span className="text-slate-400">First visit:</span> {selectedUserForModal.registeredAt ? new Date(selectedUserForModal.registeredAt).toLocaleString() : 'Not recorded'}</p>
+                <p><span className="text-slate-400">Last active:</span> {selectedUserForModal.lastActive ? new Date(selectedUserForModal.lastActive).toLocaleString() : 'Not recorded'}</p>
+                <p><span className="text-slate-400">Device:</span> {selectedUserForModal.deviceType || 'Unknown'}</p>
+                <p><span className="text-slate-400">Browser:</span> {(() => { const ua=selectedUserForModal.userAgent||''; return /Edg\//i.test(ua)?'Microsoft Edge':/Firefox\//i.test(ua)?'Firefox':/SamsungBrowser\//i.test(ua)?'Samsung Internet':/CriOS\//i.test(ua)?'Chrome (iOS)':/Chrome\//i.test(ua)?'Chrome':/Safari\//i.test(ua)?'Safari':'Unknown browser'; })()}</p>
+                <p className="break-all"><span className="text-slate-400">Device ID:</span> {selectedUserForModal.deviceId}</p>
               </div>
             </div>
 
