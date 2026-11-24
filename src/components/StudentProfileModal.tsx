@@ -75,17 +75,24 @@ export const StudentProfileModal: React.FC<StudentProfileModalProps> = ({
         return;
       }
       try {
-        const res = await safeFetchJson('/api/admin/verify-password', {
+        // Use the same passcode verification endpoint as the Admin login.
+        const response = await fetch('/api/admin/verify-passcode', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ password: cleanPass }),
+          credentials: 'same-origin',
+          body: JSON.stringify({ passcode: cleanPass }),
         });
-        if (!res?.valid) {
-          setProfileError('Galat password! Chand naam set karne ke liye sahi 6-digit admin password darj karein.');
+        const result = await response.json().catch(() => null);
+        if (!response.ok || !result) {
+          setProfileError('Server se password verify nahi ho paya. Thodi der baad dobara try karein.');
+          return;
+        }
+        if (result.verified !== true) {
+          setProfileError(result.error || 'Galat password! Chand naam set karne ke liye sahi 6-digit admin password darj karein.');
           return;
         }
       } catch (_) {
-        setProfileError('Password verify karne mein samasya aayi.');
+        setProfileError('Server connection nahi ho raha. Internet ya backend ko dobara try karein.');
         return;
       }
     }
