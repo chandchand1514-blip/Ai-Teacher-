@@ -1232,6 +1232,7 @@ app.get('/api/admin/users', async (req, res) => {
         lastActivityTimestamp: Number(rawProf.lastActivityTimestamp || 0),
         adsEnabled: rawProf.adsEnabled !== false,
         allowedAdIds: Array.isArray(rawProf.allowedAdIds) ? rawProf.allowedAdIds : [],
+        welcomeVideoAdEnabled: rawProf.welcomeVideoAdEnabled !== false,
         grade,
         deviceId: key.startsWith('dev_') ? key : (rawProf.deviceId || key),
         visitCount: visits,
