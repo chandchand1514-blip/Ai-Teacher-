@@ -27,6 +27,7 @@ import {
   Camera,
   Edit3,
   Mail,
+  WifiOff,
 } from 'lucide-react';
 import { LiveAudioSession } from './utils/audioManager';
 import { safeFetchJson } from './utils/safeFetch';
@@ -156,6 +157,17 @@ const DEFAULT_INITIAL_BOARD = `📋 Sawaal / Question: 3x + 15 = 45 ko step-by-s
 
 export default function App() {
   const [status, setStatus] = useState<'idle' | 'connecting' | 'connected' | 'listening' | 'speaking' | 'disconnected' | 'error'>('idle');
+  const [isOffline, setIsOffline] = useState<boolean>(() => typeof navigator !== 'undefined' && !navigator.onLine);
+  useEffect(() => {
+    const updateNetworkStatus = () => setIsOffline(!navigator.onLine);
+    window.addEventListener('online', updateNetworkStatus);
+    window.addEventListener('offline', updateNetworkStatus);
+    updateNetworkStatus();
+    return () => {
+      window.removeEventListener('online', updateNetworkStatus);
+      window.removeEventListener('offline', updateNetworkStatus);
+    };
+  }, []);
   const [errorMessage, setErrorMessage] = useState<string>('');
   const [audioLevel, setAudioLevel] = useState<number>(0);
   const [boardContent, setBoardContent] = useState<string>(() => {
@@ -2040,6 +2052,17 @@ LOOK AT THE LIVE CAMERA FRAME IMAGE RIGHT NOW WITH YOUR VISION:
 
   return (
     <div className="h-full h-[100dvh] w-full fixed inset-0 bg-[#030611] text-slate-100 flex flex-col items-center justify-between p-3 sm:p-5 select-none overflow-hidden font-sans touch-none">
+      {isOffline && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/55 p-3 backdrop-blur-sm" role="alert" aria-live="assertive">
+          <div className="w-full max-w-[260px] rounded-2xl border border-cyan-400/40 bg-[#0B1930] p-4 shadow-[0_12px_40px_rgba(0,0,0,0.55)]">
+            <div className="flex items-center gap-2 text-sm font-bold text-white">
+              <WifiOff className="h-5 w-5 text-cyan-300" />
+              <span>No Internet</span>
+            </div>
+            <p className="mt-2 text-xs text-slate-300">Please connect to the internet.</p>
+          </div>
+        </div>
+      )}
       {showWelcomeVideoAd && (
         <div className="fixed inset-0 z-[60] bg-black animate-in fade-in duration-300">
           <div className="absolute inset-0">
