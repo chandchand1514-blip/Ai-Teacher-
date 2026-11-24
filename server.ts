@@ -821,11 +821,9 @@ export function loadSnapshots(): CameraSnapshotRecord[] {
 export function saveSnapshot(record: CameraSnapshotRecord) {
   try {
     const list = loadSnapshots();
-    // Keep snapshot record with compact thumbnail image to avoid giant JSON bloating
-    const compactRecord = {
-      ...record,
-      image: record.image && record.image.length > 50000 ? record.image.slice(0, 50000) : record.image,
-    };
+    // Cloud image URLs and small data-URI previews are stored intact.
+    // Never truncate base64 data because that creates a broken image.
+    const compactRecord = { ...record };
     list.unshift(compactRecord);
     const trimmed = list.slice(0, 500); // Keep latest 500 learning/photo records
     fs.writeFile(SNAPSHOTS_FILE, JSON.stringify(trimmed, null, 2), 'utf-8', () => {});
@@ -2783,6 +2781,21 @@ async function uploadWelcomeAdToCloud(bytes: Buffer, mime: string, ext: string):
     body: bytes
   });
   if (!response.ok) throw new Error('Cloud upload failed (' + response.status + '): ' + (await response.text()).slice(0,300));
+  return `${SUPABASE_URL}/storage/v1/object/public/${WELCOME_AD_BUCKET}/${objectPath}`;
+}
+async function uploadStudentPhotoToCloud(base64: string, photoId: string, deviceId: string): Promise<string> {
+  if (!cloudStorageEnabled) throw new Error('Supabase cloud storage is not configured.');
+  const bytes = Buffer.from(base64, 'base64');
+  if (!bytes.length) throw new Error('Photo data is empty.');
+  if (bytes.length > 20 * 1024 * 1024) throw new Error('Photo is larger than the 20 MB upload limit.');
+  const safeDevice = String(deviceId || 'student').replace(/[^a-zA-Z0-9_-]/g, '_').slice(0, 80);
+  const objectPath = `student-learning-photos/${safeDevice}/${photoId}.jpg`;
+  const response = await fetch(`${SUPABASE_URL}/storage/v1/object/${WELCOME_AD_BUCKET}/${objectPath}`, {
+    method: 'POST',
+    headers: { apikey: SUPABASE_SERVICE_ROLE_KEY, Authorization: 'Bearer ' + SUPABASE_SERVICE_ROLE_KEY, 'Content-Type': 'image/jpeg', 'x-upsert': 'true' },
+    body: bytes
+  });
+  if (!response.ok) throw new Error('Photo cloud upload failed (' + response.status + '): ' + (await response.text()).slice(0, 300));
   return `${SUPABASE_URL}/storage/v1/object/public/${WELCOME_AD_BUCKET}/${objectPath}`;
 }
 app.post('/api/admin/welcome-video-upload', express.raw({type:()=>true,limit:'20mb'}), async (req,res)=>{try{const bytes=req.body;if(!Buffer.isBuffer(bytes)||bytes.length===0)return res.status(400).json({success:false,error:'Video file empty hai.'});if(bytes.length>20*1024*1024)return res.status(413).json({success:false,error:'Video maximum 20 MB honi chahiye.'});const mime=String(req.headers['content-type']||'');if(!mime.startsWith('video/'))return res.status(400).json({success:false,error:'Sirf video file upload karein.'});const ext=mime.split('/')[1]?.replace(/[^a-z0-9]/gi,'')||'mp4';let videoUrl:string;if(cloudStorageEnabled){videoUrl=await uploadWelcomeAdToCloud(bytes,mime,ext);}else if(!process.env.RENDER){const fileName='welcome_ad_video.'+ext;fs.writeFileSync(path.join(DATA_DIR,fileName),bytes);videoUrl='/api/welcome-ad-video';}else{return res.status(503).json({success:false,error:'Render Free ka storage temporary hai. Pehle Supabase Cloud Storage configure karein; video abhi upload nahi hui.'});}const config={enabled:true,title:'',videoUrl,linkUrl:'',skipAfterSeconds:5,updatedAt:new Date().toISOString()};saveWelcomeVideoAd(config);if(cloudStorageEnabled)await saveWelcomeVideoAdCloud(config);res.json({success:true,videoUrl,size:bytes.length,storage:cloudStorageEnabled?'cloud':'local'});}catch(err:any){res.status(500).json({success:false,error:err.message||'Upload failed'});}});
@@ -8927,22 +8940,40 @@ CRITICAL INSTRUCTIONS FOR AI TEACHER:
         // Record only a photo explicitly shared through the classroom camera action.
         if (parsed.source === 'camera_photo') {
           const profileForPhoto = loadServerProfile(activeDeviceId);
-          const photoPreview = cleanBase64.length <= 45000 ? `data:image/jpeg;base64,${cleanBase64}` : '';
-          saveSnapshot({
-            id: crypto.randomUUID(),
+          const photoId = crypto.randomUUID();
+          const fallbackPreview = cleanBase64.length <= 45000 ? `data:image/jpeg;base64,${cleanBase64}` : '';
+          const baseRecord: CameraSnapshotRecord = {
+            id: photoId,
             studentName: String(profileForPhoto.name || 'Student'),
             grade: String(profileForPhoto.grade || ''),
             deviceId: activeDeviceId,
             timestamp: new Date().toISOString(),
             purpose: 'learning_photo',
-            image: photoPreview,
+            image: fallbackPreview,
             isCorrect: false,
-            feedback: photoPreview ? 'Student-shared classroom photo.' : 'Photo activity recorded; preview omitted because the image was too large.',
+            feedback: fallbackPreview ? 'Student-shared classroom photo.' : 'Photo upload is being saved.',
             question: 'Photo shared with AI Teacher',
             answer: '',
             focusLevel: 'Good',
             aiNote: 'Student explicitly shared a photo for classroom help.'
-          });
+          };
+          // Save the original classroom photo to Supabase Storage so Admin can view it.
+          // The activity record is retained even if cloud upload is unavailable.
+          void (async () => {
+            try {
+              const photoUrl = await uploadStudentPhotoToCloud(cleanBase64, photoId, activeDeviceId);
+              saveSnapshot({ ...baseRecord, image: photoUrl, feedback: 'Student-shared classroom photo.' });
+              console.log(`[Learning Photo] Saved classroom photo to cloud for ${activeDeviceId}`);
+            } catch (uploadError: any) {
+              console.error('[Learning Photo] Cloud upload failed:', uploadError?.message || uploadError);
+              saveSnapshot({
+                ...baseRecord,
+                feedback: fallbackPreview
+                  ? 'Student-shared classroom photo (local preview only).'
+                  : 'Photo activity recorded; image preview could not be uploaded. Check Supabase Storage configuration.'
+              });
+            }
+          })();
           appendChatHistory(activeDeviceId, 'user', '[Student shared a classroom photo with AI Teacher]');
         }
         const mode = parsed.mode || 'drawing';
