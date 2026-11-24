@@ -10,6 +10,7 @@ import {
   MicOff,
   Sparkles,
   Volume2,
+  VolumeX,
   Eraser,
   Trophy,
   GraduationCap,
