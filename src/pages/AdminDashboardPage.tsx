@@ -41,6 +41,7 @@ export interface UserRecord {
   lastActivityTimestamp?: number;
   adsEnabled?: boolean;
   allowedAdIds?: string[];
+  welcomeVideoAdEnabled?: boolean;
   hasRealName?: boolean;
   isNamePending?: boolean;
   visitCount: number;
