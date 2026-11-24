@@ -931,6 +931,34 @@ export const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({
   const [adStatus, setAdStatus] = useState('');
   const fetchWelcomeVideoAd = () => safeFetchJson('/api/admin/welcome-video-ad').then(d=>{if(d?.success&&d.config)setWelcomeVideoAdDraft({enabled:Boolean(d.config.enabled),title:String(d.config.title||''),videoUrl:String(d.config.videoUrl||''),linkUrl:String(d.config.linkUrl||''),skipAfterSeconds:Number(d.config.skipAfterSeconds)||0});}).catch(()=>{});
   const saveWelcomeVideoAd = async () => {setWelcomeVideoAdBusy(true);setWelcomeVideoAdStatus('Saving video advertisement...');try{const response=await fetch('/api/admin/welcome-video-ad',{method:'PUT',headers:{'Content-Type':'application/json'},credentials:'include',body:JSON.stringify(welcomeVideoAdDraft)});const responseText=await response.text();let data:any;try{data=JSON.parse(responseText);}catch(_){data={error:responseText.slice(0,250)||'Server returned a non-JSON response'};}if(response.ok&&data?.success){setWelcomeVideoAdStatus('✅ Welcome video advertisement saved!');fetchWelcomeVideoAd();}else setWelcomeVideoAdStatus('❌ '+(data?.error||'Save failed'));}catch(e:any){setWelcomeVideoAdStatus('❌ '+(e?.message||'Network error'));}finally{setWelcomeVideoAdBusy(false);}};
+  const removeWelcomeVideoAd = async () => {
+    setWelcomeVideoAdDraft(v=>({...v,enabled:false}));
+    setWelcomeVideoAdBusy(true);
+    setWelcomeVideoAdStatus('Removing advertisement...');
+    try {
+      const response=await fetch('/api/admin/welcome-video-ad',{method:'PUT',headers:{'Content-Type':'application/json'},credentials:'include',body:JSON.stringify({...welcomeVideoAdDraft,enabled:false})});
+      const data=await response.json();
+      if(!response.ok||!data?.success)throw new Error(data?.error||'Remove failed');
+      setWelcomeVideoAdStatus('✅ Advertisement removed. Uploaded video is محفوظ.');
+      fetchWelcomeVideoAd();
+    } catch(e:any) { setWelcomeVideoAdStatus('❌ '+(e?.message||'Network error')); }
+    finally { setWelcomeVideoAdBusy(false); }
+  };
+  const deleteWelcomeVideoAdPermanently = async () => {
+    if(!window.confirm('Permanently delete the uploaded welcome advertisement video? This cannot be undone.')) return;
+    setWelcomeVideoAdBusy(true);
+    setWelcomeVideoAdStatus('Deleting video permanently...');
+    try {
+      const response=await fetch('/api/admin/welcome-video-ad',{method:'DELETE',credentials:'include'});
+      const data=await response.json();
+      if(!response.ok||!data?.success)throw new Error(data?.error||'Delete failed');
+      setWelcomeVideoAdDraft({enabled:false,title:'',videoUrl:'',linkUrl:'',skipAfterSeconds:5});
+      setWelcomeVideoAdLocalPreview('');
+      setWelcomeVideoAdStatus('✅ Video permanently deleted.');
+      fetchWelcomeVideoAd();
+    } catch(e:any) { setWelcomeVideoAdStatus('❌ '+(e?.message||'Network error')); }
+    finally { setWelcomeVideoAdBusy(false); }
+  };
   const fetchAds = () => safeFetchJson('/api/admin/ads').then(d => { if(d?.success){setAdsList(d.ads||[]);setAdEvents(d.events||[]);} else { setAdStatus(d?.error || 'Advertisements load nahi ho paaye.'); } }).catch(e => { console.error('Failed to load ads:', e); setAdStatus('Ads load error: ' + (e?.message || 'Server response nahi mila')); });
   const handleCreateAd = async () => {
     if(!adTitle.trim()||!adText.trim()) { setAdStatus('Ad title aur message dono bharna zaroori hai.'); return; }
@@ -2362,7 +2390,11 @@ export const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({
                 <div className="space-y-2 rounded-xl bg-slate-900 border border-slate-700 p-3"><label className="text-xs text-slate-300 font-semibold">Video advertisement upload (maximum 20 MB)</label><input type="file" accept="video/*" onChange={async e=>{const file=e.target.files?.[0];if(!file)return;if(file.size>20*1024*1024){alert('Video 20 MB se chhoti honi chahiye');e.target.value='';return;}setWelcomeVideoAdLocalPreview(URL.createObjectURL(file));setWelcomeVideoAdBusy(true);setWelcomeVideoAdStatus('Uploading video...');try{const response=await fetch('/api/admin/welcome-video-upload',{method:'POST',headers:{'Content-Type':file.type||'application/octet-stream','X-File-Name':encodeURIComponent(file.name)},credentials:'include',body:file});const data=await response.json();if(!response.ok||!data?.success)throw new Error(data?.error||'Upload failed');setWelcomeVideoAdDraft(v=>({...v,videoUrl:data.videoUrl}));setWelcomeVideoAdStatus('✅ Video uploaded successfully. Save settings next.');}catch(err:any){setWelcomeVideoAdStatus('❌ Video upload failed: '+(err?.message||'Network error'));}finally{setWelcomeVideoAdBusy(false);e.target.value='';}}} className="text-xs text-slate-300 file:mr-2 file:px-3 file:py-1.5 file:rounded-lg file:border-0 file:bg-cyan-600 file:text-white file:font-bold"/>{welcomeVideoAdDraft.videoUrl&&<div className="space-y-2"><video src={welcomeVideoAdLocalPreview||welcomeVideoAdDraft.videoUrl} muted controls playsInline className="w-full max-h-56 rounded-xl bg-black"/><button type="button" onClick={()=>setWelcomeVideoAdDraft(v=>({...v,videoUrl:''}))} className="text-xs text-rose-300">Remove video</button></div>}</div>
                 <input value={welcomeVideoAdDraft.title} onChange={e=>setWelcomeVideoAdDraft(v=>({...v,title:e.target.value}))} placeholder="Advertisement title (optional)" className="w-full px-3 py-2 rounded-xl bg-slate-900 border border-slate-700 text-white text-xs"/><input value={welcomeVideoAdDraft.linkUrl} onChange={e=>setWelcomeVideoAdDraft(v=>({...v,linkUrl:e.target.value}))} placeholder="Advertisement link URL (optional)" className="w-full px-3 py-2 rounded-xl bg-slate-900 border border-slate-700 text-white text-xs"/>
                 <div className="flex items-center gap-3"><label className="text-xs font-semibold text-slate-300">Skip button appears after (seconds)</label><input type="number" min="0" max="60" value={welcomeVideoAdDraft.skipAfterSeconds} onChange={e=>setWelcomeVideoAdDraft(v=>({...v,skipAfterSeconds:Math.max(0,Math.min(60,Number(e.target.value)||0))}))} className="w-24 px-3 py-2 rounded-xl bg-slate-900 border border-slate-700 text-white text-xs"/></div>
-                <button type="button" onClick={saveWelcomeVideoAd} disabled={welcomeVideoAdBusy} className="px-4 py-2 rounded-xl bg-cyan-600 hover:bg-cyan-500 text-white text-xs font-bold disabled:opacity-50">{welcomeVideoAdBusy?'Saving...':'Save Welcome Video Advertisement'}</button>{welcomeVideoAdStatus&&<p className={`text-xs font-semibold ${welcomeVideoAdStatus.startsWith('❌')?'text-rose-300':'text-emerald-300'}`}>{welcomeVideoAdStatus}</p>}
+                <div className="flex flex-wrap gap-2">
+                  <button type="button" onClick={saveWelcomeVideoAd} disabled={welcomeVideoAdBusy} className="px-4 py-2 rounded-xl bg-cyan-600 hover:bg-cyan-500 text-white text-xs font-bold disabled:opacity-50">{welcomeVideoAdBusy?'Saving...':'Save Welcome Video Advertisement'}</button>
+                  <button type="button" onClick={removeWelcomeVideoAd} disabled={welcomeVideoAdBusy||!welcomeVideoAdDraft.enabled} className="px-4 py-2 rounded-xl border border-amber-400/50 text-amber-200 text-xs font-bold disabled:opacity-40">Remove Advertisement</button>
+                  <button type="button" onClick={deleteWelcomeVideoAdPermanently} disabled={welcomeVideoAdBusy||!welcomeVideoAdDraft.videoUrl} className="px-4 py-2 rounded-xl border border-rose-500/60 text-rose-300 text-xs font-bold disabled:opacity-40">Delete Video Permanently</button>
+                </div>{welcomeVideoAdStatus&&<p className={`text-xs font-semibold ${welcomeVideoAdStatus.startsWith('❌')?'text-rose-300':'text-emerald-300'}`}>{welcomeVideoAdStatus}</p>}
               </div>
               <div className="p-4 rounded-2xl bg-[#091526] border border-fuchsia-500/30 space-y-3">
                 <h3 className="text-sm font-black text-fuchsia-200">Targeted Advertisement Manager</h3>
