@@ -3907,7 +3907,17 @@ export const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({
                   <p className="text-xs text-slate-400">No saved photo records for this user. Only photos captured and saved by the app's existing notes/focus features appear here.</p>
                 ) : selectedUserForModal.sharedImages.map((photo) => (
                   <div key={photo.id} className="rounded-lg border border-slate-700 bg-slate-900 p-2 space-y-2">
-                    {photo.image ? <img src={photo.image} alt="Photo shared with AI Teacher" className="max-h-56 w-full rounded-lg object-contain bg-black" /> : <p className="text-[10px] text-slate-400">Photo activity recorded; preview is not available for this large image.</p>}
+                    {photo.image ? (
+                      <button
+                        type="button"
+                        onClick={() => setPreviewAdminFullImage(photo.image)}
+                        className="w-full flex items-center justify-center gap-2 rounded-lg border border-cyan-500/40 bg-cyan-950/40 px-3 py-2 text-xs font-bold text-cyan-200 hover:bg-cyan-900/60"
+                      >
+                        <Eye className="h-4 w-4" /> Preview Photo
+                      </button>
+                    ) : (
+                      <p className="text-[10px] text-amber-300">Photo activity saved, but this older upload has no stored image preview. New photos will appear here after cloud upload succeeds.</p>
+                    )}
                     <p className="text-[10px] text-slate-400">{photo.timestamp ? new Date(photo.timestamp).toLocaleString() : 'Time not recorded'} · {photo.purpose === 'notes_check' ? 'Notes photo' : photo.purpose === 'learning_photo' ? 'Classroom photo' : photo.purpose === 'focus_proctoring' ? 'Focus photo' : 'Saved photo'}</p>
                     {photo.question && <p className="text-xs text-slate-200"><strong>Question:</strong> {photo.question}</p>}
                     {photo.answer && <p className="text-xs text-slate-200"><strong>AI response:</strong> {photo.answer}</p>}
@@ -3916,6 +3926,30 @@ export const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({
                 ))}
               </div>
             </details>
+
+            {previewAdminFullImage && (
+              <div
+                className="fixed inset-0 z-[260] flex items-center justify-center bg-black/95 p-3"
+                onClick={() => setPreviewAdminFullImage(null)}
+              >
+                <div className="relative flex max-h-[92vh] w-full max-w-3xl items-center justify-center">
+                  <img
+                    src={previewAdminFullImage}
+                    alt="Student shared classroom photo"
+                    className="max-h-[88vh] max-w-full rounded-xl object-contain"
+                    onClick={(event) => event.stopPropagation()}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setPreviewAdminFullImage(null)}
+                    className="absolute right-2 top-2 rounded-full bg-black/80 p-2 text-white"
+                    aria-label="Close photo preview"
+                  >
+                    <X className="h-5 w-5" />
+                  </button>
+                </div>
+              </div>
+            )}
 
             <details className="rounded-xl border border-indigo-500/30 bg-[#10152e] p-3">
               <summary className="cursor-pointer list-none flex items-center justify-between gap-2 text-xs font-bold uppercase tracking-wide text-indigo-300">
