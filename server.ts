@@ -862,8 +862,8 @@ export function appendChatHistory(deviceId: string, role: 'user' | 'assistant', 
     text: text.trim(),
     timestamp: Date.now(),
   });
-  // Keep last 60 turns in permanent memory
-  profile.chatHistory = history.slice(-500);
+  // Keep the latest 2,000 conversation messages per student in permanent memory
+  profile.chatHistory = history.slice(-2000);
   profile.updatedAt = new Date().toISOString();
   saveServerProfile(profile, deviceId);
 }
@@ -1242,7 +1242,7 @@ app.get('/api/admin/users', (req, res) => {
         weeklyQuestions: weeklyQuestions.slice(-10),
         // Admin-only learning activity view: previously saved conversation turns and
         // image snapshots explicitly captured by existing notes/focus features.
-        chatHistory: Array.isArray(rawProf.chatHistory) ? rawProf.chatHistory.slice(-500) : [],
+        chatHistory: Array.isArray(rawProf.chatHistory) ? rawProf.chatHistory.slice(-2000) : [],
         sharedImages: loadSnapshots()
           .filter((snap: any) => (String(snap.deviceId || '') === String(key) || String(snap.deviceId || '') === String(rawProf.deviceId || '')) && snap.purpose !== 'focus_proctoring')
           .slice(0, 100)
