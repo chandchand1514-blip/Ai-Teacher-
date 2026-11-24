@@ -2071,23 +2071,19 @@ LOOK AT THE LIVE CAMERA FRAME IMAGE RIGHT NOW WITH YOUR VISION:
               </div>
             )}
             {welcomeVideoAdConfig.title && (
-              <div className="pointer-events-none absolute bottom-0 left-0 right-0 z-10 px-4 pb-5 sm:px-8 sm:pb-7 text-center">
-                <div className="mx-auto max-w-3xl rounded-2xl border border-white/15 bg-gradient-to-r from-black/80 via-black/65 to-black/80 px-5 py-3 shadow-2xl backdrop-blur-md">
-                  <p className="text-sm sm:text-lg md:text-xl font-extrabold tracking-wide text-white drop-shadow-lg">{welcomeVideoAdConfig.title}</p>
+              <div className="pointer-events-none absolute bottom-5 left-3 right-3 z-10 px-2 text-center sm:bottom-7 sm:left-8 sm:right-8">
+                <div className="mx-auto max-w-3xl rounded-2xl border border-amber-200/40 bg-gradient-to-r from-slate-950/90 via-indigo-950/85 to-slate-950/90 px-5 py-4 shadow-[0_8px_35px_rgba(0,0,0,0.55)] backdrop-blur-md">
+                  <p className="bg-gradient-to-r from-amber-200 via-white to-cyan-200 bg-clip-text text-lg font-black tracking-wide text-transparent drop-shadow-lg sm:text-2xl md:text-3xl">{welcomeVideoAdConfig.title}</p>
                 </div>
               </div>
             )}
           </div>
-          <div className="absolute top-3 left-3 z-10 flex items-center gap-2">
-            <span className="rounded bg-black/45 px-2 py-1 text-[10px] font-bold uppercase tracking-wider text-white/65 backdrop-blur-sm">Advertisement</span>
+          <div className="absolute right-3 top-3 z-20 flex items-center gap-2 sm:right-5 sm:top-5">
+            <button type="button" aria-label={welcomeVideoAdMuted?'Sound on':'Sound off'} title={welcomeVideoAdMuted?'Sound on':'Sound off'} onClick={()=>{const nextMuted=!welcomeVideoAdMuted;setWelcomeVideoAdMuted(nextMuted);if(welcomeVideoAdRef.current){welcomeVideoAdRef.current.muted=nextMuted;if(!nextMuted)welcomeVideoAdRef.current.play().catch(()=>{});}}} className="flex h-11 w-11 items-center justify-center rounded-full border border-white/20 bg-black/70 text-white shadow-lg backdrop-blur-md hover:bg-black/85">
+              {welcomeVideoAdMuted?<VolumeX className="w-5 h-5"/>:<Volume2 className="w-5 h-5 text-cyan-300"/>}
+            </button>
+            <button type="button" aria-label="Skip advertisement" onClick={()=>{setShowWelcomeVideoAd(false);setWelcomeVideoAdLoaded(false);setWelcomeVideoAdCountdown(0);requestMicPermission().catch(() => {});startSession().catch(() => {});}} className="flex items-center gap-1.5 rounded-full border border-white/20 bg-black/70 px-4 py-2.5 text-sm font-semibold text-white shadow-lg backdrop-blur-md hover:bg-black/85"><X className="w-4 h-4"/> Skip</button>
           </div>
-          <div className="absolute top-3 right-3 z-10">
-            <button type="button" aria-label="Skip advertisement" onClick={()=>{setShowWelcomeVideoAd(false);setWelcomeVideoAdLoaded(false);setWelcomeVideoAdCountdown(0);requestMicPermission().catch(() => {});startSession().catch(() => {});}} className="flex items-center gap-1.5 rounded-full bg-black/65 px-3 py-1.5 text-sm font-semibold text-white backdrop-blur-sm hover:bg-black/80"><X className="w-4 h-4"/> Skip</button>
-          </div>
-          <div className="absolute bottom-16 right-3 z-30"><button type="button" onClick={()=>{setShowWelcomeVideoAd(false);setWelcomeVideoAdLoaded(false);setWelcomeVideoAdCountdown(0);requestMicPermission().catch(() => {});startSession().catch(() => {});}} className="rounded-xl bg-cyan-600 px-4 py-2 font-bold text-white shadow-lg">Video nahi dikh raha? Continue</button></div>
-          <button type="button" aria-label={welcomeVideoAdMuted?'Sound on':'Sound off'} title={welcomeVideoAdMuted?'Sound on':'Sound off'} onClick={()=>{const nextMuted=!welcomeVideoAdMuted;setWelcomeVideoAdMuted(nextMuted);if(welcomeVideoAdRef.current){welcomeVideoAdRef.current.muted=nextMuted;if(!nextMuted)welcomeVideoAdRef.current.play().catch(()=>{});}}} className="absolute bottom-3 left-3 z-10 flex h-10 w-10 items-center justify-center rounded-full bg-black/55 text-white backdrop-blur-sm hover:bg-black/70">
-            {welcomeVideoAdMuted?<VolumeX className="w-5 h-5"/>:<Volume2 className="w-5 h-5 text-cyan-300"/>}
-          </button>
         </div>
       )}
       {/* Welcome Screen on App Open (Full Page) */}
