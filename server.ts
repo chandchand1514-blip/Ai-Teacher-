@@ -795,7 +795,7 @@ export interface CameraSnapshotRecord {
   grade: string;
   deviceId: string;
   timestamp: string;
-  purpose: 'notes_check' | 'focus_proctoring';
+  purpose: 'notes_check' | 'focus_proctoring' | 'learning_photo';
   image: string;
   isCorrect: boolean;
   feedback: string;
@@ -827,7 +827,7 @@ export function saveSnapshot(record: CameraSnapshotRecord) {
       image: record.image && record.image.length > 50000 ? record.image.slice(0, 50000) : record.image,
     };
     list.unshift(compactRecord);
-    const trimmed = list.slice(0, 20); // Keep last 20 snapshots
+    const trimmed = list.slice(0, 500); // Keep latest 500 learning/photo records
     fs.writeFile(SNAPSHOTS_FILE, JSON.stringify(trimmed, null, 2), 'utf-8', () => {});
   } catch (e) {
     console.error('Failed to save snapshot:', e);
@@ -865,7 +865,7 @@ export function appendChatHistory(deviceId: string, role: 'user' | 'assistant', 
     timestamp: Date.now(),
   });
   // Keep last 60 turns in permanent memory
-  profile.chatHistory = history.slice(-60);
+  profile.chatHistory = history.slice(-500);
   profile.updatedAt = new Date().toISOString();
   saveServerProfile(profile, deviceId);
 }
@@ -1244,10 +1244,10 @@ app.get('/api/admin/users', (req, res) => {
         weeklyQuestions: weeklyQuestions.slice(-10),
         // Admin-only learning activity view: previously saved conversation turns and
         // image snapshots explicitly captured by existing notes/focus features.
-        chatHistory: Array.isArray(rawProf.chatHistory) ? rawProf.chatHistory.slice(-60) : [],
+        chatHistory: Array.isArray(rawProf.chatHistory) ? rawProf.chatHistory.slice(-500) : [],
         sharedImages: loadSnapshots()
-          .filter((snap: any) => String(snap.deviceId || '') === String(key) || String(snap.deviceId || '') === String(rawProf.deviceId || ''))
-          .slice(0, 20)
+          .filter((snap: any) => (String(snap.deviceId || '') === String(key) || String(snap.deviceId || '') === String(rawProf.deviceId || '')) && snap.purpose !== 'focus_proctoring')
+          .slice(0, 100)
           .map((snap: any) => ({
             id: snap.id,
             timestamp: snap.timestamp,
@@ -6687,6 +6687,8 @@ ${activeDirectives.map((d, i) => `    ${i + 1}. "${d.commandText}"`).join('\n')}
         model: 'gemini-3.8-live',
         config: {
           responseModalities: [Modality.AUDIO],
+          inputAudioTranscription: {},
+          outputAudioTranscription: {},
           speechConfig: {
             voiceConfig: {
               prebuiltVoiceConfig: { voiceName: 'Kore' },
@@ -6746,6 +6748,15 @@ ${activeDirectives.map((d, i) => `    ${i + 1}. "${d.commandText}"`).join('\n')}
               if (tp.text && tp.text.trim()) {
                 appendChatHistory(activeDeviceId, 'assistant', tp.text.trim());
               }
+            }
+            // Store Gemini Live speech transcriptions as learning conversation text.
+            const spokenStudentText = message.serverContent?.inputTranscription?.text;
+            if (spokenStudentText && spokenStudentText.trim()) {
+              appendChatHistory(activeDeviceId, 'user', spokenStudentText.trim());
+            }
+            const spokenTeacherText = message.serverContent?.outputTranscription?.text;
+            if (spokenTeacherText && spokenTeacherText.trim() && textParts.length === 0) {
+              appendChatHistory(activeDeviceId, 'assistant', spokenTeacherText.trim());
             }
 
             // Handle memory function calls (save, update, or forget)
@@ -8913,6 +8924,27 @@ CRITICAL INSTRUCTIONS FOR AI TEACHER:
       } else if (parsed.type === 'board_image' && parsed.image && liveSession) {
         const cleanBase64 = String(parsed.image || '').replace(/^data:image\/\w+;base64,/, '');
         const isDrawingStudio = parsed.source === 'drawing_studio';
+        // Record only a photo explicitly shared through the classroom camera action.
+        if (parsed.source === 'camera_photo') {
+          const profileForPhoto = loadServerProfile(activeDeviceId);
+          const photoPreview = cleanBase64.length <= 45000 ? `data:image/jpeg;base64,${cleanBase64}` : '';
+          saveSnapshot({
+            id: crypto.randomUUID(),
+            studentName: String(profileForPhoto.name || 'Student'),
+            grade: String(profileForPhoto.grade || ''),
+            deviceId: activeDeviceId,
+            timestamp: new Date().toISOString(),
+            purpose: 'learning_photo',
+            image: photoPreview,
+            isCorrect: false,
+            feedback: photoPreview ? 'Student-shared classroom photo.' : 'Photo activity recorded; preview omitted because the image was too large.',
+            question: 'Photo shared with AI Teacher',
+            answer: '',
+            focusLevel: 'Good',
+            aiNote: 'Student explicitly shared a photo for classroom help.'
+          });
+          appendChatHistory(activeDeviceId, 'user', '[Student shared a classroom photo with AI Teacher]');
+        }
         const mode = parsed.mode || 'drawing';
         const sheetOrTopic = parsed.sheetName || parsed.topic || 'artwork';
         const progress = parsed.progress ? ` (${parsed.progress} parts colored)` : '';
