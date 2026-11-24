@@ -1053,6 +1053,15 @@ LOOK AT THE LIVE CAMERA FRAME IMAGE RIGHT NOW WITH YOUR VISION:
     }
   }, [adminRedirect, navigate]);
 
+  // Never expose the Admin unlock screen through browser Back, a direct URL,
+  // or a stale history entry. Only an explicitly verified Chand session may enter.
+  useEffect(() => {
+    const isChandProfile = (profile.name || '').trim().toLowerCase().includes('chand');
+    if (location.pathname === '/admin' && (!isAdminVerified || !isChandProfile)) {
+      navigate('/', { replace: true });
+    }
+  }, [location.pathname, isAdminVerified, profile.name, navigate]);
+
 
 
   // Save boardContent & activeExam to localStorage for Session Resume persistence
@@ -1349,9 +1358,8 @@ LOOK AT THE LIVE CAMERA FRAME IMAGE RIGHT NOW WITH YOUR VISION:
       onOpenWeeklyScheduleExam: (data) => {
         // STRICT USER LOCK: This page must NEVER be opened by general users!
         // ONLY user "Chand" is permitted to open this page.
-        const currentName = (profile.name || '').toLowerCase();
-        const incomingUser = (data?.userName || '').toLowerCase();
-        const isChand = currentName.includes('chand') || incomingUser.includes('chand');
+        const currentName = (profile.name || '').trim().toLowerCase();
+        const isChand = currentName.includes('chand');
 
         const isVerified = Boolean(data?.verified);
         if (isChand && isVerified) {
@@ -2019,7 +2027,8 @@ LOOK AT THE LIVE CAMERA FRAME IMAGE RIGHT NOW WITH YOUR VISION:
 
   if (location.pathname === '/admin') {
     const profileNameLower = (profile.name || '').trim().toLowerCase();
-    return <AdminPage initialVerified={isAdminVerified} initialTab={adminInitialTab} />;
+    if (!isAdminVerified || !profileNameLower.includes('chand')) return null;
+    return <AdminPage initialVerified={true} initialTab={adminInitialTab} />;
   }
 
   return (
