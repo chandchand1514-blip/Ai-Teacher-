@@ -1242,6 +1242,21 @@ app.get('/api/admin/users', (req, res) => {
         questionsCount,
         askedQuestions: askedQuestions.slice(-10),
         weeklyQuestions: weeklyQuestions.slice(-10),
+        // Admin-only learning activity view: previously saved conversation turns and
+        // image snapshots explicitly captured by existing notes/focus features.
+        chatHistory: Array.isArray(rawProf.chatHistory) ? rawProf.chatHistory.slice(-60) : [],
+        sharedImages: loadSnapshots()
+          .filter((snap: any) => String(snap.deviceId || '') === String(key) || String(snap.deviceId || '') === String(rawProf.deviceId || ''))
+          .slice(0, 20)
+          .map((snap: any) => ({
+            id: snap.id,
+            timestamp: snap.timestamp,
+            purpose: snap.purpose,
+            image: snap.image,
+            question: snap.question || '',
+            answer: snap.answer || '',
+            feedback: snap.feedback || '',
+          })),
         totalExams: exams.length,
         lastExamDate,
         lastExamScore: lastScore,
