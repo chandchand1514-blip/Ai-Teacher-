@@ -2043,10 +2043,9 @@ LOOK AT THE LIVE CAMERA FRAME IMAGE RIGHT NOW WITH YOUR VISION:
             />
             {!welcomeVideoAdLoaded && (
               <div className="absolute inset-0 z-20 flex items-center justify-center bg-black/90 text-white">
-                <div className="flex flex-col items-center gap-3 rounded-2xl border border-white/15 bg-black/40 px-6 py-5 text-center">
+                <div className="flex flex-col items-center gap-3 text-center">
                   <div className="h-9 w-9 animate-spin rounded-full border-2 border-white/25 border-t-cyan-300" />
                   <p className="text-sm font-semibold">Advertisement loading…</p>
-                  <p className="text-xs text-white/60">If video cannot load, Welcome screen will open automatically.</p>
                 </div>
               </div>
             )}
