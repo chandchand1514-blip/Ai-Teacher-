@@ -3792,8 +3792,8 @@ export const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({
 
       {/* Student Details Diagnostic Modal */}
       {selectedUserForModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-in fade-in select-none">
-          <div className="relative w-full max-w-xs bg-[#0a1526] border border-cyan-500/40 rounded-xl p-3 shadow-2xl space-y-1">
+        <div className="fixed inset-0 z-50 flex items-start sm:items-center justify-center p-2 sm:p-4 bg-black/80 backdrop-blur-md animate-in fade-in select-none overflow-y-auto overscroll-contain">
+          <div className="relative w-full max-w-sm max-h-[calc(100dvh-1rem)] sm:max-h-[90dvh] overflow-y-auto overscroll-contain touch-pan-y bg-[#0a1526] border border-cyan-500/40 rounded-xl p-3 shadow-2xl space-y-2">
             {/* Header */}
             <div className="flex items-center justify-between border-b border-slate-800 pb-2">
               <div className="flex items-center gap-2">
@@ -3842,8 +3842,9 @@ export const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({
               </div>
             </div>
 
-            <div className="space-y-2 rounded-xl border border-cyan-500/25 bg-[#09182d] p-3">
-              <h4 className="text-xs font-bold uppercase tracking-wide text-cyan-300">User & Device Details</h4>
+            <details className="rounded-xl border border-cyan-500/25 bg-[#09182d] p-3">
+              <summary className="cursor-pointer list-none text-xs font-bold uppercase tracking-wide text-cyan-300 flex items-center justify-between">User & Device Details <span className="text-[10px] text-slate-400 normal-case">Tap to view</span></summary>
+              <div className="mt-2 space-y-2">
               <div className="grid grid-cols-1 gap-1.5 text-[11px] text-slate-200">
                 <p><span className="text-slate-400">User name:</span> <strong>{selectedUserForModal.hasRealName ? selectedUserForModal.name : 'Name not provided yet'}</strong></p>
                 <p><span className="text-slate-400">Status:</span> <strong className={selectedUserForModal.isLiveNow ? 'text-emerald-300' : 'text-slate-200'}>{selectedUserForModal.isLiveNow ? 'Online now' : 'Offline'}</strong></p>
@@ -3853,9 +3854,12 @@ export const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({
                 <p><span className="text-slate-400">Browser:</span> {(() => { const ua=selectedUserForModal.userAgent||''; return /Edg\//i.test(ua)?'Microsoft Edge':/Firefox\//i.test(ua)?'Firefox':/SamsungBrowser\//i.test(ua)?'Samsung Internet':/CriOS\//i.test(ua)?'Chrome (iOS)':/Chrome\//i.test(ua)?'Chrome':/Safari\//i.test(ua)?'Safari':'Unknown browser'; })()}</p>
                 <p className="break-all"><span className="text-slate-400">Device ID:</span> {selectedUserForModal.deviceId}</p>
               </div>
-            </div>
+              </div>
+            </details>
 
-            <div className="space-y-2 rounded-xl border border-fuchsia-500/30 bg-[#170f26] p-3">
+            <details className="rounded-xl border border-fuchsia-500/30 bg-[#170f26] p-3">
+              <summary className="cursor-pointer list-none text-xs font-bold uppercase tracking-wide text-fuchsia-200 flex items-center justify-between">Advertisement Settings <span className="text-[10px] text-slate-400 normal-case">Tap to view</span></summary>
+              <div className="mt-2 space-y-2">
               <h4 className="text-xs font-bold uppercase tracking-wide text-fuchsia-200">Advertisement Settings for this user</h4>
               <label className="flex items-center gap-2 text-xs text-white">
                 <input type="checkbox" checked={userAdsEnabled} onChange={e=>setUserAdsEnabled(e.target.checked)} />
@@ -3869,7 +3873,8 @@ export const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({
                 </label>
               ))}
               <button type="button" onClick={saveUserAdPreferences} disabled={userAdsSaving} className="w-full rounded-lg bg-fuchsia-600 px-3 py-2 text-xs font-bold text-white disabled:opacity-50">{userAdsSaving?'Saving...':'Save Advertisement Settings'}</button>
-            </div>
+              </div>
+            </details>
 
             {selectedUserForModal.learnedTopics.length > 0 && (
               <div className="space-y-2">
