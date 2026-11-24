@@ -3825,28 +3825,19 @@ export const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({
               </button>
             </div>
 
-            <div className="grid grid-cols-3 gap-1 text-center text-[10px]">
-              <div className="p-2 rounded-lg bg-slate-900 border border-slate-800">
-                <span className="text-[10px] text-slate-400 block">Visits</span>
-                <strong className="text-white text-xs font-mono">{selectedUserForModal.visitCount}</strong>
-              </div>
-              <div className="p-3 rounded-2xl bg-slate-900 border border-slate-800">
-                <span className="text-[10px] text-slate-400 block">Stars</span>
-                <strong className="text-amber-300 text-sm font-mono">{selectedUserForModal.starsCount}</strong>
-              </div>
-              <div className="p-3 rounded-2xl bg-slate-900 border border-slate-800">
-                <span className="text-[10px] text-slate-400 block">Exam Avg</span>
-                <strong className="text-emerald-300 text-sm font-mono">
-                  {selectedUserForModal.averageExamScore !== null ? `${selectedUserForModal.averageExamScore}%` : '—'}
-                </strong>
-              </div>
-            </div>
-
             <details className="rounded-xl border border-cyan-500/25 bg-[#09182d] p-3">
               <summary className="cursor-pointer list-none text-xs font-bold uppercase tracking-wide text-cyan-300 flex items-center justify-between">User & Device Details <span className="text-[10px] text-slate-400 normal-case">Tap to view</span></summary>
               <div className="mt-2 space-y-2">
+              <div className="grid grid-cols-3 gap-1 text-center text-[10px]">
+                <div className="p-2 rounded-lg bg-slate-900 border border-slate-800"><span className="text-[10px] text-slate-400 block">Visits</span><strong className="text-white text-xs font-mono">{selectedUserForModal.visitCount}</strong></div>
+                <div className="p-2 rounded-lg bg-slate-900 border border-slate-800"><span className="text-[10px] text-slate-400 block">Stars</span><strong className="text-amber-300 text-xs font-mono">{selectedUserForModal.starsCount}</strong></div>
+                <div className="p-2 rounded-lg bg-slate-900 border border-slate-800"><span className="text-[10px] text-slate-400 block">Exam Avg</span><strong className="text-emerald-300 text-xs font-mono">{selectedUserForModal.averageExamScore !== null ? `${selectedUserForModal.averageExamScore}%` : '—'}</strong></div>
+              </div>
               <div className="grid grid-cols-1 gap-1.5 text-[11px] text-slate-200">
                 <p><span className="text-slate-400">User name:</span> <strong>{selectedUserForModal.hasRealName ? selectedUserForModal.name : 'Name not provided yet'}</strong></p>
+                <p><span className="text-slate-400">Class:</span> {selectedUserForModal.grade || 'Not provided'}</p>
+                <p><span className="text-slate-400">Position:</span> {selectedUserForModal.studentRole || selectedUserForModal.role || 'Not provided'}</p>
+                <p><span className="text-slate-400">Islamic position:</span> {selectedUserForModal.islamicTitle || 'Not provided'}</p>
                 <p><span className="text-slate-400">Status:</span> <strong className={selectedUserForModal.isLiveNow ? 'text-emerald-300' : 'text-slate-200'}>{selectedUserForModal.isLiveNow ? 'Online now' : 'Offline'}</strong></p>
                 <p><span className="text-slate-400">First visit:</span> {selectedUserForModal.registeredAt ? new Date(selectedUserForModal.registeredAt).toLocaleString() : 'Not recorded'}</p>
                 <p><span className="text-slate-400">Last active:</span> {selectedUserForModal.lastActive ? new Date(selectedUserForModal.lastActive).toLocaleString() : 'Not recorded'}</p>
