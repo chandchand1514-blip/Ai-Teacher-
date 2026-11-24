@@ -2131,6 +2131,9 @@ LOOK AT THE LIVE CAMERA FRAME IMAGE RIGHT NOW WITH YOUR VISION:
               <button type="button" onClick={handleWelcomeStartWithMic} className="mt-3 w-full rounded-xl bg-gradient-to-r from-cyan-500 to-blue-600 px-5 py-3 text-sm font-bold text-white shadow-lg shadow-cyan-900/30 hover:brightness-110 active:scale-[0.98] transition">
                 Enter AI Teacher
               </button>
+              <p className="mt-1 max-w-xs px-2 text-center text-[10px] leading-relaxed text-slate-400">
+                Your questions and answers may be recorded by AI to improve learning.
+              </p>
             </div>
           </div>
         </div>
