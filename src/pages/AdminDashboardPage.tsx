@@ -39,6 +39,8 @@ export interface UserRecord {
   userAgent?: string;
   registeredAt?: string;
   lastActivityTimestamp?: number;
+  adsEnabled?: boolean;
+  allowedAdIds?: string[];
   hasRealName?: boolean;
   isNamePending?: boolean;
   visitCount: number;
@@ -912,6 +914,10 @@ export const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({
   const [userSearchQuery, setUserSearchQuery] = useState<string>('');
   const [userGradeFilter, setUserGradeFilter] = useState<string>('All');
   const [selectedUserForModal, setSelectedUserForModal] = useState<UserRecord | null>(null);
+  const [userAdsEnabled, setUserAdsEnabled] = useState(true);
+  const [userAllowedAdIds, setUserAllowedAdIds] = useState<string[]>([]);
+  const [userAdsSaving, setUserAdsSaving] = useState(false);
+
   const [isAddUserModalOpen, setIsAddUserModalOpen] = useState<boolean>(false);
   const [newStudentName, setNewStudentName] = useState<string>('');
   const [newStudentGrade, setNewStudentGrade] = useState<GradeLevel>('Class 1');
@@ -932,6 +938,23 @@ export const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({
   const [showAdPlacementMenu, setShowAdPlacementMenu] = useState(false);
   const [adBusy, setAdBusy] = useState(false);
   const [adStatus, setAdStatus] = useState('');
+  useEffect(() => {
+    setUserAdsEnabled(selectedUserForModal?.adsEnabled !== false);
+    setUserAllowedAdIds(Array.isArray(selectedUserForModal?.allowedAdIds) ? selectedUserForModal.allowedAdIds : []);
+  }, [selectedUserForModal]);
+  const saveUserAdPreferences = async () => {
+    if(!selectedUserForModal) return;
+    setUserAdsSaving(true);
+    try {
+      const response=await fetch('/api/admin/users/'+encodeURIComponent(selectedUserForModal.id)+'/ad-preferences',{method:'PUT',headers:{'Content-Type':'application/json'},credentials:'include',body:JSON.stringify({adsEnabled:userAdsEnabled,allowedAdIds:userAllowedAdIds})});
+      const data=await response.json();
+      if(!response.ok||!data?.success) throw new Error(data?.error||'Save failed');
+      setSelectedUserForModal(prev=>prev?{...prev,adsEnabled:userAdsEnabled,allowedAdIds:userAllowedAdIds}:prev);
+      setUsersList(prev=>prev.map(u=>u.id===selectedUserForModal.id?{...u,adsEnabled:userAdsEnabled,allowedAdIds:userAllowedAdIds}:u));
+      setAdStatus('User advertisement settings saved.');
+    } catch(e:any) { setAdStatus('Ad settings save failed: '+(e?.message||'Network error')); }
+    finally { setUserAdsSaving(false); }
+  };
   const fetchWelcomeVideoAd = () => safeFetchJson('/api/admin/welcome-video-ad').then(d=>{if(d?.success&&d.config)setWelcomeVideoAdDraft({enabled:Boolean(d.config.enabled),title:String(d.config.title||''),videoUrl:String(d.config.videoUrl||''),linkUrl:String(d.config.linkUrl||''),skipAfterSeconds:Number(d.config.skipAfterSeconds)||0});}).catch(()=>{});
   const saveWelcomeVideoAd = async () => {setWelcomeVideoAdBusy(true);setWelcomeVideoAdStatus('Saving video advertisement...');try{const response=await fetch('/api/admin/welcome-video-ad',{method:'PUT',headers:{'Content-Type':'application/json'},credentials:'include',body:JSON.stringify(welcomeVideoAdDraft)});const responseText=await response.text();let data:any;try{data=JSON.parse(responseText);}catch(_){data={error:responseText.slice(0,250)||'Server returned a non-JSON response'};}if(response.ok&&data?.success){setWelcomeVideoAdStatus('✅ Welcome video advertisement saved!');fetchWelcomeVideoAd();}else setWelcomeVideoAdStatus('❌ '+(data?.error||'Save failed'));}catch(e:any){setWelcomeVideoAdStatus('❌ '+(e?.message||'Network error'));}finally{setWelcomeVideoAdBusy(false);}};
   const removeWelcomeVideoAd = async () => {
@@ -3830,6 +3853,22 @@ export const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({
                 <p><span className="text-slate-400">Browser:</span> {(() => { const ua=selectedUserForModal.userAgent||''; return /Edg\//i.test(ua)?'Microsoft Edge':/Firefox\//i.test(ua)?'Firefox':/SamsungBrowser\//i.test(ua)?'Samsung Internet':/CriOS\//i.test(ua)?'Chrome (iOS)':/Chrome\//i.test(ua)?'Chrome':/Safari\//i.test(ua)?'Safari':'Unknown browser'; })()}</p>
                 <p className="break-all"><span className="text-slate-400">Device ID:</span> {selectedUserForModal.deviceId}</p>
               </div>
+            </div>
+
+            <div className="space-y-2 rounded-xl border border-fuchsia-500/30 bg-[#170f26] p-3">
+              <h4 className="text-xs font-bold uppercase tracking-wide text-fuchsia-200">Advertisement Settings for this user</h4>
+              <label className="flex items-center gap-2 text-xs text-white">
+                <input type="checkbox" checked={userAdsEnabled} onChange={e=>setUserAdsEnabled(e.target.checked)} />
+                Show advertisements to this user
+              </label>
+              <p className="text-[10px] text-slate-400">Choose specific ads below. If none are selected, all active ads can show when ads are enabled.</p>
+              {adsList.length===0 ? <p className="text-[10px] text-slate-400">No advertisements created yet.</p> : adsList.map((ad:any)=>(
+                <label key={ad.id} className="flex items-center gap-2 text-[11px] text-slate-200">
+                  <input type="checkbox" checked={userAllowedAdIds.includes(ad.id)} onChange={e=>setUserAllowedAdIds(prev=>e.target.checked?[...prev,ad.id]:prev.filter(id=>id!==ad.id))} />
+                  <span>{ad.title||'Untitled advertisement'} {ad.imageUrl?'(Image)':''}</span>
+                </label>
+              ))}
+              <button type="button" onClick={saveUserAdPreferences} disabled={userAdsSaving} className="w-full rounded-lg bg-fuchsia-600 px-3 py-2 text-xs font-bold text-white disabled:opacity-50">{userAdsSaving?'Saving...':'Save Advertisement Settings'}</button>
             </div>
 
             {selectedUserForModal.learnedTopics.length > 0 && (
