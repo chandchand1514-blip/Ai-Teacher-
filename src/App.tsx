@@ -1185,12 +1185,35 @@ LOOK AT THE LIVE CAMERA FRAME IMAGE RIGHT NOW WITH YOUR VISION:
     return () => clearInterval(timer);
   }, [showWelcomeModal]);
 
-  // Keep welcome screen visible until the user explicitly starts; never leave a blank app screen.
+  // Show the configured welcome video ad, while keeping a guaranteed path into AI Teacher.
   const handleWelcomeStartWithMic = async () => {
-    // Reliable startup: do not let the welcome-ad video overlay block AI Teacher.
+    let config = welcomeVideoAdConfig;
+    if (!welcomeVideoAdReady) {
+      try {
+        const data = await safeFetchJson('/api/welcome-video-ad');
+        const raw = data?.config;
+        if (raw) {
+          config = {
+            enabled: Boolean(raw.enabled),
+            title: String(raw.title || ''),
+            videoUrl: String(raw.videoUrl || ''),
+            linkUrl: String(raw.linkUrl || ''),
+            skipAfterSeconds: Math.max(0, Math.min(60, Number(raw.skipAfterSeconds) || 0))
+          };
+          setWelcomeVideoAdConfig(config);
+        }
+      } catch (_) {}
+    }
+    if (config.enabled && config.videoUrl) {
+      setWelcomeVideoAdMuted(true);
+      setWelcomeVideoAdLoaded(false);
+      setWelcomeVideoAdCountdown(config.skipAfterSeconds);
+      setShowWelcomeModal(false);
+      setShowWelcomeVideoAd(true);
+      return;
+    }
     setShowWelcomeModal(false);
     setShowWelcomeVideoAd(false);
-    setWelcomeVideoAdLoaded(false);
     requestMicPermission().catch(() => {});
     startSession().catch(() => {});
   };
