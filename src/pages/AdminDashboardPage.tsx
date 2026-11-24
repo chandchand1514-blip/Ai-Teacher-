@@ -917,6 +917,7 @@ export const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({
   const [userGradeFilter, setUserGradeFilter] = useState<string>('All');
   const [selectedUserForModal, setSelectedUserForModal] = useState<UserRecord | null>(null);
   const [userAdsEnabled, setUserAdsEnabled] = useState(true);
+  const [userWelcomeVideoAdEnabled, setUserWelcomeVideoAdEnabled] = useState(true);
   const [userAllowedAdIds, setUserAllowedAdIds] = useState<string[]>([]);
   const [userAdsSaving, setUserAdsSaving] = useState(false);
 
@@ -942,17 +943,18 @@ export const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({
   const [adStatus, setAdStatus] = useState('');
   useEffect(() => {
     setUserAdsEnabled(selectedUserForModal?.adsEnabled !== false);
+    setUserWelcomeVideoAdEnabled(selectedUserForModal?.welcomeVideoAdEnabled !== false);
     setUserAllowedAdIds(Array.isArray(selectedUserForModal?.allowedAdIds) ? selectedUserForModal.allowedAdIds : []);
   }, [selectedUserForModal]);
   const saveUserAdPreferences = async () => {
     if(!selectedUserForModal) return;
     setUserAdsSaving(true);
     try {
-      const response=await fetch('/api/admin/users/'+encodeURIComponent(selectedUserForModal.id)+'/ad-preferences',{method:'PUT',headers:{'Content-Type':'application/json'},credentials:'include',body:JSON.stringify({adsEnabled:userAdsEnabled,allowedAdIds:userAllowedAdIds})});
+      const response=await fetch('/api/admin/users/'+encodeURIComponent(selectedUserForModal.id)+'/ad-preferences',{method:'PUT',headers:{'Content-Type':'application/json'},credentials:'include',body:JSON.stringify({adsEnabled:userAdsEnabled,allowedAdIds:userAllowedAdIds,welcomeVideoAdEnabled:userWelcomeVideoAdEnabled})});
       const data=await response.json();
       if(!response.ok||!data?.success) throw new Error(data?.error||'Save failed');
-      setSelectedUserForModal(prev=>prev?{...prev,adsEnabled:userAdsEnabled,allowedAdIds:userAllowedAdIds}:prev);
-      setUsersList(prev=>prev.map(u=>u.id===selectedUserForModal.id?{...u,adsEnabled:userAdsEnabled,allowedAdIds:userAllowedAdIds}:u));
+      setSelectedUserForModal(prev=>prev?{...prev,adsEnabled:userAdsEnabled,allowedAdIds:userAllowedAdIds,welcomeVideoAdEnabled:userWelcomeVideoAdEnabled}:prev);
+      setUsersList(prev=>prev.map(u=>u.id===selectedUserForModal.id?{...u,adsEnabled:userAdsEnabled,allowedAdIds:userAllowedAdIds,welcomeVideoAdEnabled:userWelcomeVideoAdEnabled}:u));
       setAdStatus('User advertisement settings saved.');
     } catch(e:any) { setAdStatus('Ad settings save failed: '+(e?.message||'Network error')); }
     finally { setUserAdsSaving(false); }
@@ -3855,6 +3857,10 @@ export const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({
               <label className="flex items-center gap-2 text-xs text-white">
                 <input type="checkbox" checked={userAdsEnabled} onChange={e=>setUserAdsEnabled(e.target.checked)} />
                 Show advertisements to this user
+              </label>
+              <label className="flex items-center gap-2 rounded-lg border border-cyan-400/20 bg-slate-950/70 px-2.5 py-2 text-[11px] text-cyan-100">
+                <input type="checkbox" checked={userWelcomeVideoAdEnabled} onChange={e=>setUserWelcomeVideoAdEnabled(e.target.checked)} />
+                Show welcome video advertisement to this user
               </label>
               <p className="text-[10px] text-slate-400">Choose specific ads below. If none are selected, all active ads can show when ads are enabled.</p>
               {adsList.length===0 ? <p className="text-[10px] text-slate-400">No advertisements created yet.</p> : adsList.map((ad:any)=>(
