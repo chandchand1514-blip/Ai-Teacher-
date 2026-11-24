@@ -3907,8 +3907,8 @@ export const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({
                   <p className="text-xs text-slate-400">No saved photo records for this user. Only photos captured and saved by the app's existing notes/focus features appear here.</p>
                 ) : selectedUserForModal.sharedImages.map((photo) => (
                   <div key={photo.id} className="rounded-lg border border-slate-700 bg-slate-900 p-2 space-y-2">
-                    {photo.image && <img src={photo.image} alt="Photo shared with AI Teacher" className="max-h-56 w-full rounded-lg object-contain bg-black" />}
-                    <p className="text-[10px] text-slate-400">{photo.timestamp ? new Date(photo.timestamp).toLocaleString() : 'Time not recorded'} · {photo.purpose === 'notes_check' ? 'Notes photo' : photo.purpose === 'focus_proctoring' ? 'Focus photo' : 'Saved photo'}</p>
+                    {photo.image ? <img src={photo.image} alt="Photo shared with AI Teacher" className="max-h-56 w-full rounded-lg object-contain bg-black" /> : <p className="text-[10px] text-slate-400">Photo activity recorded; preview is not available for this large image.</p>}
+                    <p className="text-[10px] text-slate-400">{photo.timestamp ? new Date(photo.timestamp).toLocaleString() : 'Time not recorded'} · {photo.purpose === 'notes_check' ? 'Notes photo' : photo.purpose === 'learning_photo' ? 'Classroom photo' : photo.purpose === 'focus_proctoring' ? 'Focus photo' : 'Saved photo'}</p>
                     {photo.question && <p className="text-xs text-slate-200"><strong>Question:</strong> {photo.question}</p>}
                     {photo.answer && <p className="text-xs text-slate-200"><strong>AI response:</strong> {photo.answer}</p>}
                     {photo.feedback && <p className="text-xs text-slate-300">{photo.feedback}</p>}
