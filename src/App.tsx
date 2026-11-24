@@ -1046,6 +1046,13 @@ LOOK AT THE LIVE CAMERA FRAME IMAGE RIGHT NOW WITH YOUR VISION:
 
   const navigate = useNavigate();
   const location = useLocation();
+  const previousRouteRef = useRef(location.pathname);
+  useEffect(() => {
+    if (previousRouteRef.current === '/admin' && location.pathname !== '/admin') {
+      setIsAdminVerified(false);
+    }
+    previousRouteRef.current = location.pathname;
+  }, [location.pathname]);
   useEffect(() => {
     if (adminRedirect) {
       navigate('/admin');
