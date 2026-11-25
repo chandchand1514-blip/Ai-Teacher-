@@ -1227,6 +1227,20 @@ LOOK AT THE LIVE CAMERA FRAME IMAGE RIGHT NOW WITH YOUR VISION:
     startSession().catch(() => {});
   };
 
+  // Automatically enter the classroom as soon as the Render-backed ad/config request finishes.
+  // The request above wakes a sleeping Render service; no welcome button is required.
+  const autoWelcomeStartedRef = useRef(false);
+  useEffect(() => {
+    if (!welcomeVideoAdReady || !showWelcomeModal || autoWelcomeStartedRef.current) return;
+    autoWelcomeStartedRef.current = true;
+    handleWelcomeStartWithMic().catch((err) => {
+      console.warn('[Automatic Welcome Start Error]:', err);
+      setShowWelcomeModal(false);
+      requestMicPermission().catch(() => {});
+      startSession().catch(() => {});
+    });
+  }, [welcomeVideoAdReady, showWelcomeModal]);
+
   const isLiveActive = status === 'listening' || status === 'speaking' || status === 'connected' || status === 'connecting';
 
   const startSession = async () => {
@@ -2145,15 +2159,13 @@ LOOK AT THE LIVE CAMERA FRAME IMAGE RIGHT NOW WITH YOUR VISION:
               </p>
             </div>
 
-            {/* Clean Welcome Loader (No extra buttons) */}
-            <div className="w-full max-w-xs mt-3 flex flex-col items-center gap-2">
-              <div className="flex items-center gap-2 text-cyan-300 text-xs font-mono font-medium animate-pulse">
-                <Sparkles className="w-4 h-4 text-cyan-400" />
-                <span>Opening AI Classroom...</span>
+            {/* Automatic Render connection loader; classroom opens when the server responds. */}
+            <div className="w-full max-w-xs mt-3 flex flex-col items-center gap-3" role="status" aria-live="polite">
+              <div className="h-10 w-10 rounded-full border-[3px] border-cyan-300/20 border-t-cyan-300 animate-spin shadow-[0_0_18px_rgba(34,211,238,0.25)]" />
+              <div className="flex flex-col items-center gap-1">
+                <span className="text-cyan-200 text-sm font-semibold tracking-wide">Loading AI Teacher...</span>
+                <span className="text-slate-400 text-[11px] font-mono">Connecting to classroom</span>
               </div>
-              <button type="button" onClick={handleWelcomeStartWithMic} className="mt-3 w-full rounded-xl bg-gradient-to-r from-cyan-500 to-blue-600 px-5 py-3 text-sm font-bold text-white shadow-lg shadow-cyan-900/30 hover:brightness-110 active:scale-[0.98] transition">
-                Enter AI Teacher
-              </button>
             </div>
           </div>
         </div>
