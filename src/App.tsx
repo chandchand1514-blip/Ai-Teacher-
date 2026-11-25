@@ -1227,18 +1227,33 @@ LOOK AT THE LIVE CAMERA FRAME IMAGE RIGHT NOW WITH YOUR VISION:
     startSession().catch(() => {});
   };
 
-  // Automatically enter the classroom as soon as the Render-backed ad/config request finishes.
-  // The request above wakes a sleeping Render service; no welcome button is required.
+  // Keep the welcome loader visible for at least five seconds, and longer if Render is still responding.
   const autoWelcomeStartedRef = useRef(false);
+  const welcomeLoaderStartedAtRef = useRef<number | null>(null);
   useEffect(() => {
-    if (!welcomeVideoAdReady || !showWelcomeModal || autoWelcomeStartedRef.current) return;
-    autoWelcomeStartedRef.current = true;
-    handleWelcomeStartWithMic().catch((err) => {
-      console.warn('[Automatic Welcome Start Error]:', err);
-      setShowWelcomeModal(false);
-      requestMicPermission().catch(() => {});
-      startSession().catch(() => {});
-    });
+    if (!showWelcomeModal) {
+      welcomeLoaderStartedAtRef.current = null;
+      return;
+    }
+    if (welcomeLoaderStartedAtRef.current === null) {
+      welcomeLoaderStartedAtRef.current = Date.now();
+    }
+    if (!welcomeVideoAdReady || autoWelcomeStartedRef.current) return;
+
+    const elapsed = Date.now() - welcomeLoaderStartedAtRef.current;
+    const remaining = Math.max(0, 5000 - elapsed);
+    const timer = setTimeout(() => {
+      if (autoWelcomeStartedRef.current) return;
+      autoWelcomeStartedRef.current = true;
+      handleWelcomeStartWithMic().catch((err) => {
+        console.warn('[Automatic Welcome Start Error]:', err);
+        setShowWelcomeModal(false);
+        requestMicPermission().catch(() => {});
+        startSession().catch(() => {});
+      });
+    }, remaining);
+
+    return () => clearTimeout(timer);
   }, [welcomeVideoAdReady, showWelcomeModal]);
 
   const isLiveActive = status === 'listening' || status === 'speaking' || status === 'connected' || status === 'connecting';
