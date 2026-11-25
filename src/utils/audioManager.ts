@@ -855,12 +855,19 @@ export class LiveAudioSession {
   }
 
   updateProfile(name: string, grade: string, role?: string, preferredLanguage?: string, adminPassword?: string) {
+    this.profileData = {
+      ...(this.profileData || {}),
+      name,
+      grade,
+      role: role || 'Basic User',
+      preferredLanguage: preferredLanguage || this.profileData?.preferredLanguage || 'Hinglish',
+    };
     this.sendWsPayload({
       type: 'update_profile',
       name,
       grade,
       role: role || 'Basic User',
-      preferredLanguage: preferredLanguage || 'Hinglish',
+      preferredLanguage: this.profileData.preferredLanguage,
       adminPassword: adminPassword || '',
     });
   }
@@ -870,9 +877,11 @@ export class LiveAudioSession {
   }
 
   updateLanguage(language: string) {
+    const selectedLanguage = language || 'Hinglish';
+    this.profileData = { ...(this.profileData || {}), preferredLanguage: selectedLanguage };
     this.sendWsPayload({
       type: 'update_language',
-      preferredLanguage: language || 'Hinglish',
+      preferredLanguage: selectedLanguage,
     });
   }
 
