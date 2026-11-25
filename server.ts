@@ -1017,6 +1017,11 @@ app.post('/api/profile', (req, res) => {
   const isDeleteName = deleteName === true || action === 'delete' || action === 'clear_name' || name === '';
   const updatedName = isDeleteName ? '' : ((name && typeof name === 'string' && name.trim()) ? name.trim() : (existing.name || ''));
 
+  // Once a student profile exists, users cannot remove it themselves. Only authenticated admin deletion may remove a saved record.
+  if (isDeleteName && existing.name && !existing.name.toLowerCase().includes('chand')) {
+    return res.status(403).json({ success: false, error: 'Saved profile cannot be deleted by a user. Please contact Admin.' });
+  }
+
   const isChandAttempt = updatedName.toLowerCase().includes('chand');
   const adminPass = String(req.body.adminPassword || req.headers['x-admin-password'] || '').trim();
   const correctPass = getAdminPassword();
@@ -1064,14 +1069,8 @@ app.post('/api/profile', (req, res) => {
     lastActivityTimestamp: Date.now(),
   };
 
-  // If user clears their own name locally, remove duplicate old-name entries WITHOUT blacklisting their device
-  if (isDeleteName && existing.name && !existing.name.toLowerCase().includes('chand')) {
-    deleteUserOrDevice(existing.name, { permanent: false });
-  }
-
-  if (replacePreviousName && replacePreviousName.toLowerCase() !== updatedName.toLowerCase() && !replacePreviousName.toLowerCase().includes('chand')) {
-    deleteUserOrDevice(replacePreviousName, { permanent: false });
-  }
+  // Do not delete old profile records when a user changes their name or clears a local profile.
+  // Saved records remain available to the admin; only the authenticated admin delete action can remove them.
   saveServerProfile(updated, key);
   res.json({ success: true, profile: updated });
 });
