@@ -8925,16 +8925,19 @@ CRITICAL ADMIN-ONLY RULES:
             });
           } else {
             liveSession.sendRealtimeInput({
-              text: `[SYSTEM NOTIFICATION - STUDENT MANUALLY UPDATED PROFILE]: 
+              text: `[SYSTEM NOTIFICATION - STUDENT MANUALLY UPDATED PROFILE]:
 Student Name: "${newName || 'Student'}"
 Student Class / Grade: "${newGrade}"
 Position / Role: "${newRole}"
-Preferred Language: "${newLang}"
+Selected spoken language: "${newLang}"
 
-CRITICAL INSTRUCTIONS FOR AI TEACHER:
-1. Immediately acknowledge the student's updated name and class out loud! Say: "Maine dekh liya! Aapka naam ab ${newName || 'Student'} aur class ${newGrade} set ho gaya hai! Chaliye ab hum ${newGrade} ke hisab se padhai shuru karte hain!"
-2. Strictly adapt all future questions, lessons, subject difficulty, and concepts to match the curriculum of ${newGrade}!
-3. Always address the student by their updated name "${newName || 'Student'}".`
+MANDATORY LANGUAGE LOCK:
+- Immediately acknowledge the profile update ONLY in ${newLang}.
+- From this moment, every spoken and written response must use ONLY ${newLang}.
+- Understand messages in other languages if needed, but NEVER switch your reply language to match them.
+- Do not translate, add bilingual explanations, or mix another language unless the selected language itself is Hinglish.
+- Keep this language until the student explicitly selects another language in the language selector.
+- Adapt all future lessons and difficulty to ${newGrade}, and address the student as "${newName || 'Student'}".`
             });
           }
         }
@@ -8950,7 +8953,9 @@ CRITICAL INSTRUCTIONS FOR AI TEACHER:
         }
         if (liveSession) {
           liveSession.sendRealtimeInput({
-            text: `[SYSTEM NOTIFICATION - SPOKEN LANGUAGE UPDATED TO ${newLang.toUpperCase()}]: The student has configured their preferred spoken language as "${newLang}". YOU MUST IMMEDIATELY SPEAK OUT LOUD IN ${newLang}: "Maine apni bhasha badal kar ${newLang} kar di hai! Ab main aapase ${newLang} mein baat karungi!" and continue all future explanations exclusively in ${newLang}!`
+            text: `[SYSTEM NOTIFICATION - SPOKEN LANGUAGE UPDATED]:
+The student has explicitly selected "${newLang}" in the language selector.
+MANDATORY: Acknowledge this change only in ${newLang}. From now on, ALL spoken replies, greetings, explanations, teaching, and written responses must be exclusively in ${newLang}. Understand other languages if spoken, but do not reply in them. Never switch, translate, code-switch, or add a second language unless the selected language is Hinglish. Keep this lock until the student explicitly selects a different language.`
           });
         }
       } else if (parsed.audio && liveSession) {
